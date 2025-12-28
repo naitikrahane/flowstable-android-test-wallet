@@ -8,11 +8,17 @@ import org.json.JSONObject
 class Web3Bridge(
     private val webView: WebView,
     private val address: String,
-    private val chainId: Int = 1 // Mainnet default
+    private val chainId: Int = 1,
+    private val onActionRequest: (Web3Request) -> Unit
 ) {
     private val gson = Gson()
 
-    // JS to be injected
+    data class Web3Request(
+        val id: Int,
+        val method: String,
+        val params: String
+    )
+
     fun getInjectionJs(): String {
         return """
             (function() {
@@ -21,7 +27,7 @@ class Web3Bridge(
                 
                 window.ethereum = {
                     isAntigravity: true,
-                    isMetaMask: true, // Some dApps check this
+                    isMetaMask: true,
                     address: address,
                     chainId: chainId,
                     
@@ -60,7 +66,6 @@ class Web3Bridge(
                     }
                 };
                 
-                // Dispatch event that provider is ready
                 window.dispatchEvent(new Event('ethereum#initialized'));
             })();
         """.trimIndent()
@@ -71,6 +76,7 @@ class Web3Bridge(
         val obj = JSONObject(json)
         val method = obj.getString("method")
         val id = obj.getInt("id")
+        val params = obj.optString("params", "[]")
         
         webView.post {
             when (method) {
@@ -83,16 +89,24 @@ class Web3Bridge(
                 "net_version" -> {
                     sendResponse(id, "\"$chainId\"")
                 }
+                "eth_sendTransaction", "personal_sign", "eth_sign", "eth_signTypedData_v4" -> {
+                    onActionRequest(Web3Request(id, method, params))
+                }
                 else -> {
-                    // For now, return null for unsupported methods
-                    sendResponse(id, "null")
+                    sendError(id, "Method $method not supported")
                 }
             }
         }
     }
 
-    private fun sendResponse(id: Int, resultJson: String) {
+    fun sendResponse(id: Int, resultJson: String) {
         val js = "javascript:window.onRpcResponse($id, $resultJson, null)"
+        webView.evaluateJavascript(js, null)
+    }
+
+    fun sendError(id: Int, message: String) {
+        val errorJson = "{\"message\": \"$message\", \"code\": 4001}"
+        val js = "javascript:window.onRpcResponse($id, null, $errorJson)"
         webView.evaluateJavascript(js, null)
     }
 }
