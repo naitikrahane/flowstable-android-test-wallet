@@ -207,7 +207,7 @@ fun WalletScreen(
                 onClick = onSetupSecurity
             ) {
                  androidx.compose.material3.Icon(
-                     imageVector =  Icons.Filled.Lock,
+                     imageVector = androidx.compose.material.icons.filled.Lock,
                      contentDescription = "Security Settings",
                      tint = BrutalBlack,
                      modifier = Modifier.size(32.dp)
