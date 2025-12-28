@@ -147,3 +147,57 @@ fun BrutalistInfoRow(label: String, value: String) {
         )
     }
 }
+
+data class BottomNavItem(
+    val title: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val route: String
+)
+
+@Composable
+fun BrutalistBottomBar(
+    items: List<BottomNavItem>,
+    currentRoute: String?,
+    onItemClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, BrutalBlack)
+            .background(BrutalWhite)
+            .height(64.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items.forEach { item ->
+            val isSelected = currentRoute == item.route
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(if (isSelected) BrutalBlack else BrutalWhite)
+                    .clickable { onItemClick(item.route) }
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    androidx.compose.material3.Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.title,
+                        tint = if (isSelected) BrutalWhite else BrutalBlack,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = item.title.uppercase(),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) BrutalWhite else BrutalBlack
+                    )
+                }
+            }
+            // Vertical Divider
+            if (item != items.last()) {
+                Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(BrutalBlack))
+            }
+        }
+    }
+}

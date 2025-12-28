@@ -37,8 +37,8 @@ fun WalletApp(startDestination: String = "intro") {
             )
         }
         composable("home") {
-            com.antigravity.cryptowallet.ui.wallet.WalletScreen(
-                onSetupSecurity = { navController.navigate("security_setup") }
+            MainScreen(
+                onNavigateToSecuritySetup = { navController.navigate("security_setup") }
             )
         }
         
