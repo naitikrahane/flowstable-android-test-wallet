@@ -39,6 +39,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import com.antigravity.cryptowallet.utils.QrCodeGenerator
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+
 @HiltViewModel
 class WalletViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
@@ -72,7 +75,7 @@ class WalletViewModel @Inject constructor(
             launch {
                 assetRepository.assets.collect { assetList ->
                     assets = assetList
-                    val total = assetList.sumOf { it.rawBalance * it.price }
+                    val total = assetList.sumByDouble { it.rawBalance * it.price }
                     totalBalanceUsd = String.format("$%.2f", total)
                 }
             }
@@ -204,7 +207,7 @@ fun WalletScreen(
                 onClick = onSetupSecurity
             ) {
                  androidx.compose.material3.Icon(
-                     imageVector =  androidx.compose.material.icons.Icons.Default.Lock,
+                     imageVector =  Icons.Filled.Lock,
                      contentDescription = "Security Settings",
                      tint = BrutalBlack,
                      modifier = Modifier.size(32.dp)
