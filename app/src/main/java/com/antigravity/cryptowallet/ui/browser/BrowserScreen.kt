@@ -93,6 +93,14 @@ fun BrowserScreen(
                     WebView(context).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
+                        settings.databaseEnabled = true
+                        settings.loadWithOverviewMode = true
+                        settings.useWideViewPort = true
+                        
+                        // Support Mixed Content (HTTP on HTTPS) - sometimes needed
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                        }
                         
                         val bridge = Web3Bridge(this, address) { request ->
                             pendingRequest = request
@@ -112,6 +120,9 @@ fun BrowserScreen(
                                 view?.evaluateJavascript(bridge.getInjectionJs(), null)
                             }
                         }
+                        
+                        webChromeClient = android.webkit.WebChromeClient()
+                        
                         loadUrl(url)
                         webView = this
                     }
