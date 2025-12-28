@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import com.antigravity.cryptowallet.ui.WalletApp
 import com.antigravity.cryptowallet.ui.theme.CryptoWalletTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
