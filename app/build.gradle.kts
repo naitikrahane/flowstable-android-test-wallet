@@ -87,9 +87,8 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // Web3j & Crypto (using lightweight core if possible, but standard is robust)
-    implementation("org.web3j:core:4.8.7-android") 
-    // crypto
-    implementation("org.bouncycastle:bcprov-jdk15on:1.68")
+    // Web3j & Crypto
+    implementation("org.web3j:core:4.10.0-android")
     
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
