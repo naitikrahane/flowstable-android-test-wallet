@@ -17,6 +17,13 @@ class HistoryViewModel @Inject constructor(
     val transactions = repository.transactions
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun refresh() {
+        viewModelScope.launch {
+            // Placeholder for real sync logic
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+
     init {
         // Add a demo receive transaction if we don't have real data yet (optional, for demo)
         viewModelScope.launch {

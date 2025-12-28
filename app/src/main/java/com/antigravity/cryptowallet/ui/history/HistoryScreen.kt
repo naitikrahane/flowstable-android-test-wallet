@@ -40,7 +40,21 @@ fun HistoryScreen(
             .padding(16.dp)
     ) {
         
-        BrutalistHeader("History")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BrutalistHeader("History")
+            IconButton(onClick = { viewModel.refresh() }) { // Changed to IconButton
+                Icon(
+                    imageVector = Icons.Default.Refresh, 
+                    contentDescription = "Sync",
+                    tint = BrutalBlack,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
 
         if (transactions.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

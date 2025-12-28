@@ -13,6 +13,10 @@ import javax.inject.Singleton
 class WalletRepository @Inject constructor(
     private val secureStorage: SecureStorage
 ) {
+    init {
+        loadWallet()
+    }
+
     // In-memory cache of credentials (cleared on lock)
     var activeCredentials: Credentials? = null
         private set

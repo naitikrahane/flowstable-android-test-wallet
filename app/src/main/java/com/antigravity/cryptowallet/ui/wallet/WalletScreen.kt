@@ -12,6 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,11 +51,13 @@ class WalletViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val assetRepository: AssetRepository
 ) : ViewModel() {
-    val address = walletRepository.getAddress()
+    val address: String
+        get() = walletRepository.getAddress()
     
     // UI State
     var totalBalanceUsd by mutableStateOf("$0.00")
     var assets by mutableStateOf<List<com.antigravity.cryptowallet.data.models.AssetUiModel>>(emptyList())
+    var isRefreshing by mutableStateOf(false)
     
     // Tab State
     var selectedTab by mutableStateOf(0) // 0 = Assets, 1 = NFTs
@@ -65,6 +70,24 @@ class WalletViewModel @Inject constructor(
         viewModelScope.launch {
             // Default to ETH chain for now for custom tokens
             assetRepository.addToken(address, symbol, decimals, "eth", symbol)
+        }
+    }
+
+    fun sendAsset(asset: com.antigravity.cryptowallet.data.models.AssetUiModel, toAddress: String, amount: String) {
+        viewModelScope.launch {
+            try {
+                assetRepository.sendAsset(asset, toAddress, amount)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            isRefreshing = true
+            assetRepository.refreshAssets()
+            isRefreshing = false
         }
     }
 
@@ -81,8 +104,8 @@ class WalletViewModel @Inject constructor(
                 }
             }
             
-            // Trigger refresh
-            assetRepository.refreshAssets()
+            // Trigger initial refresh
+            refresh()
         }
     }
 }
@@ -101,6 +124,81 @@ fun WalletScreen(
         val clipboardManager = LocalClipboardManager.current
         var showReceiveDialog by remember { mutableStateOf(false) }
         var showAddTokenDialog by remember { mutableStateOf(false) }
+        var showSendDialog by remember { mutableStateOf(false) }
+
+        if (showSendDialog) {
+            var inputAddress by remember { mutableStateOf("") }
+            var inputAmount by remember { mutableStateOf("") }
+            var selectedAsset by remember { mutableStateOf(viewModel.assets.firstOrNull()) }
+            var isSending by remember { mutableStateOf(false) }
+
+            Dialog(onDismissRequest = { if(!isSending) showSendDialog = false }) {
+                Column(
+                    modifier = Modifier
+                        .background(BrutalWhite)
+                        .border(2.dp, BrutalBlack)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    BrutalistHeader("Send Assets")
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (viewModel.assets.isEmpty()) {
+                        Text("No assets to send", color = BrutalBlack)
+                    } else {
+                        // Simple dropdown placeholder or button to loop
+                        Column(modifier = Modifier.fillMaxWidth().heightIn(max = 120.dp).verticalScroll(rememberScrollState())) {
+                            viewModel.assets.forEach { asset ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { selectedAsset = asset }
+                                        .background(if (selectedAsset?.id == asset.id) BrutalBlack else BrutalWhite)
+                                        .padding(8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(asset.symbol, color = if (selectedAsset?.id == asset.id) BrutalWhite else BrutalBlack)
+                                    Text(asset.balance, color = if (selectedAsset?.id == asset.id) BrutalWhite else BrutalBlack)
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        androidx.compose.material3.OutlinedTextField(
+                            value = inputAddress,
+                            onValueChange = { inputAddress = it },
+                            label = { Text("To Address") },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSending
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        androidx.compose.material3.OutlinedTextField(
+                            value = inputAmount,
+                            onValueChange = { inputAmount = it },
+                            label = { Text("Amount") },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSending,
+                            keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        BrutalistButton(
+                            text = if(isSending) "Sending..." else "Send", 
+                            onClick = { 
+                                if (inputAddress.isNotEmpty() && inputAmount.isNotEmpty() && selectedAsset != null) {
+                                    isSending = true
+                                    viewModel.sendAsset(selectedAsset!!, inputAddress, inputAmount)
+                                    // Close after a bit or on success. For now simple:
+                                    showSendDialog = false
+                                }
+                            },
+                            enabled = !isSending
+                        )
+                    }
+                }
+            }
+        }
 
         if (showAddTokenDialog) {
             var inputAddress by remember { mutableStateOf("") }
@@ -204,15 +302,27 @@ fun WalletScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             BrutalistHeader("Dashboard")
-            androidx.compose.material3.IconButton(
-                onClick = onSetupSecurity
-            ) {
-                 androidx.compose.material3.Icon(
-                     imageVector = Icons.Filled.Lock,
-                     contentDescription = "Security Settings",
-                     tint = BrutalBlack,
-                     modifier = Modifier.size(32.dp)
-                 )
+            Row {
+                androidx.compose.material3.IconButton(
+                    onClick = { viewModel.refresh() }
+                ) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = BrutalBlack,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                androidx.compose.material3.IconButton(
+                    onClick = onSetupSecurity
+                ) {
+                    androidx.compose.material3.Icon(
+                        imageVector = Icons.Filled.Lock,
+                        contentDescription = "Security Settings",
+                        tint = BrutalBlack,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
         
@@ -312,19 +422,24 @@ fun WalletScreen(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+        // Actions
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Box(modifier = Modifier.weight(1f)) {
-                BrutalistButton(text = "Receive", onClick = { showReceiveDialog = true })
-            }
-            Box(modifier = Modifier.weight(1f)) {
-                BrutalistButton(text = "Send", onClick = { }, inverted = true)
-            }
+            BrutalistButton(
+                text = "Send",
+                onClick = { showSendDialog = true },
+                modifier = Modifier.weight(1f)
+            )
+            BrutalistButton(
+                text = "Receive",
+                onClick = { showReceiveDialog = true },
+                modifier = Modifier.weight(1f),
+                inverted = true
+            )
         }
     }
 }
