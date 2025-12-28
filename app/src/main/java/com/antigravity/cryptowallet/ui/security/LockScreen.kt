@@ -46,25 +46,38 @@ fun LockScreen(
 
     val context = LocalContext.current
     
+    // Helper to find FragmentActivity
+    fun Context.findFragmentActivity(): FragmentActivity? {
+        var ctx = this
+        while (ctx is android.content.ContextWrapper) {
+            if (ctx is FragmentActivity) return ctx
+            ctx = ctx.baseContext
+        }
+        return null
+    }
+
     // Biometric Trigger
     LaunchedEffect(Unit) {
         if (mode == LockMode.UNLOCK && biometricEnabled) {
-             val executor = ContextCompat.getMainExecutor(context)
-             val biometricPrompt = BiometricPrompt(context as FragmentActivity, executor,
-                object : BiometricPrompt.AuthenticationCallback() {
-                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        super.onAuthenticationSucceeded(result)
-                        onUnlock()
-                    }
-                })
-
-            val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Unlock Wallet")
-                .setSubtitle("Use biometric credential")
-                .setNegativeButtonText("Use PIN")
-                .build()
-
-            biometricPrompt.authenticate(promptInfo)
+             val fragmentActivity = context.findFragmentActivity()
+             if (fragmentActivity != null) {
+                 val executor = ContextCompat.getMainExecutor(context)
+                 val biometricPrompt = BiometricPrompt(fragmentActivity, executor,
+                    object : BiometricPrompt.AuthenticationCallback() {
+                        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                            super.onAuthenticationSucceeded(result)
+                            onUnlock()
+                        }
+                    })
+    
+                val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Unlock Wallet")
+                    .setSubtitle("Use biometric credential")
+                    .setNegativeButtonText("Use PIN")
+                    .build()
+    
+                biometricPrompt.authenticate(promptInfo)
+             }
         }
     }
 
