@@ -1,7 +1,6 @@
 package com.antigravity.cryptowallet.ui.theme
 
-import androidx.compose.material3.DarkColorScheme
-import androidx.compose.material3.LightColorScheme
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
