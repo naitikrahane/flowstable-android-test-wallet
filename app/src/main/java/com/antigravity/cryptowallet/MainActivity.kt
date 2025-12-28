@@ -22,7 +22,12 @@ class MainActivity : ComponentActivity() {
         
 
         
-        val startDestination = if (secureStorage.hasWallet()) "home" else "intro"
+        
+        val startDestination = if (secureStorage.hasWallet()) {
+            if (secureStorage.hasPin()) "unlock" else "home"
+        } else {
+            "intro"
+        }
 
         setContent {
             CryptoWalletTheme {

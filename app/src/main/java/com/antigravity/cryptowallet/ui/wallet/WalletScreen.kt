@@ -85,7 +85,8 @@ class WalletViewModel @Inject constructor(
 
 @Composable
 fun WalletScreen(
-    viewModel: WalletViewModel = hiltViewModel()
+    viewModel: WalletViewModel = hiltViewModel(),
+    onSetupSecurity: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -193,7 +194,23 @@ fun WalletScreen(
             }
         }
 
-        BrutalistHeader("Dashboard")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BrutalistHeader("Dashboard")
+            androidx.compose.material3.IconButton(
+                onClick = onSetupSecurity
+            ) {
+                 androidx.compose.material3.Icon(
+                     imageVector =  androidx.compose.material.icons.Icons.Default.Lock,
+                     contentDescription = "Security Settings",
+                     tint = BrutalBlack,
+                     modifier = Modifier.size(32.dp)
+                 )
+            }
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
         

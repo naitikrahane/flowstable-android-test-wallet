@@ -37,7 +37,36 @@ fun WalletApp(startDestination: String = "intro") {
             )
         }
         composable("home") {
-            com.antigravity.cryptowallet.ui.wallet.WalletScreen()
+            com.antigravity.cryptowallet.ui.wallet.WalletScreen(
+                onSetupSecurity = { navController.navigate("security_setup") }
+            )
+        }
+        
+        composable("unlock") {
+            val viewModel = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.UNLOCK,
+                onUnlock = {
+                    navController.navigate("home") {
+                        popUpTo("unlock") { inclusive = true }
+                    }
+                },
+                checkPin = { viewModel.checkPin(it) },
+                biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
+
+        composable("security_setup") {
+            val viewModel = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.SETUP,
+                onPinSet = { pin ->
+                    viewModel.setPin(pin)
+                    navController.popBackStack()
+                },
+                onUnlock = {}, // Not used in setup
+                biometricEnabled = false
+            )
         }
     }
 }
