@@ -38,7 +38,8 @@ fun BrutalistButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    inverted: Boolean = false
+    inverted: Boolean = false,
+    enabled: Boolean = true
 ) {
     val backgroundColor = if (inverted) BrutalWhite else BrutalBlack
     val contentColor = if (inverted) BrutalBlack else BrutalWhite
@@ -47,14 +48,17 @@ fun BrutalistButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    val currentBg = if (isPressed) contentColor else backgroundColor
-    val currentContent = if (isPressed) backgroundColor else contentColor
+    val currentBg = if (!enabled) Color.Gray else if (isPressed) contentColor else backgroundColor
+    val currentContent = if (!enabled) Color.LightGray else if (isPressed) backgroundColor else contentColor
 
     Button(
         onClick = onClick,
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = currentBg,
-            contentColor = currentContent
+            contentColor = currentContent,
+            disabledContainerColor = Color.Gray,
+            disabledContentColor = Color.LightGray
         ),
         shape = RectangleShape, // No rounded corners for brutalism
         border = BorderStroke(2.dp, if (inverted) BrutalBlack else BrutalWhite),

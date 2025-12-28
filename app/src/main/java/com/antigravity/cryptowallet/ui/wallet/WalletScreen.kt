@@ -45,6 +45,10 @@ import com.antigravity.cryptowallet.utils.QrCodeGenerator
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Settings
 
 @HiltViewModel
 class WalletViewModel @Inject constructor(
