@@ -2,7 +2,9 @@ package com.antigravity.cryptowallet.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.antigravity.cryptowallet.data.blockchain.NetworkRepository
 import com.antigravity.cryptowallet.data.wallet.TransactionRepository
+import com.antigravity.cryptowallet.data.wallet.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -11,7 +13,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val repository: TransactionRepository
+    private val repository: TransactionRepository,
+    private val walletRepository: WalletRepository,
+    private val networkRepository: NetworkRepository
 ) : ViewModel() {
 
     val transactions = repository.transactions
@@ -19,17 +23,16 @@ class HistoryViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            // Placeholder for real sync logic
-            kotlinx.coroutines.delay(1000)
+            if (!walletRepository.isWalletCreated()) return@launch
+            val address = walletRepository.getAddress()
+            
+            networkRepository.networks.forEach { network ->
+                repository.refreshTransactions(address, network)
+            }
         }
     }
 
     init {
-        // Add a demo receive transaction if we don't have real data yet (optional, for demo)
-        viewModelScope.launch {
-            // In a real app, we'd fetch from an indexer here.
-            // For now, let's just make sure the UI works.
-            // repository.addTransaction("0x123...", "0xSomeone", "0xMe", "1.5", "ETH", "receive", "success", "eth")
-        }
+        refresh()
     }
 }
