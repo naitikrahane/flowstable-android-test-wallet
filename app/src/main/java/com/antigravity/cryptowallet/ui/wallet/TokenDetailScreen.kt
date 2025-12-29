@@ -20,39 +20,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.antigravity.cryptowallet.ui.wallet.TokenDetailViewModel
 
 @Composable
 fun TokenDetailScreen(
     symbol: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: TokenDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
-    // Mock Data based on symbol
-    val color = when(symbol.uppercase()) {
-        "ETH" -> Color(0xFF627EEA)
-        "BNB" -> Color(0xFFF3BA2F)
-        "USDT" -> Color(0xFF26A17B)
-        "USDC" -> Color(0xFF2775CA)
-        "LINK" -> Color(0xFF2A5ADA)
-        "CAKE" -> Color(0xFFD1884F)
-        else -> MaterialTheme.colorScheme.primary
+    LaunchedEffect(symbol) {
+        viewModel.loadTokenData(symbol)
     }
+
+    val price = viewModel.price
+    val description = viewModel.description
+    val points = viewModel.graphPoints
     
-    val price = when(symbol.uppercase()) {
-        "ETH" -> "$2,245.12"
-        "BNB" -> "$312.45"
-        "USDT" -> "$1.00"
-        "Link" -> "$14.50"
-        else -> "$0.00"
-    }
-
-    val change = "+2.4%"
-    val isPositive = true
-
+    // Determine color based on trend
+    val isPositive = if (points.size > 1) points.last() >= points.first() else true
+    val trendColor = if (isPositive) Color(0xFF00C853) else Color.Red
+    
+    // ... UI Structure ...
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
+            .verticalScroll(androidx.compose.foundation.rememberScrollState())
     ) {
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -64,14 +60,10 @@ fun TokenDetailScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Price & Balance
+        // Price
         Text("Current Price", fontSize = 12.sp, color = Color.Gray)
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(price, fontSize = 48.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(change, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = if (isPositive) Color(0xFF00C853) else Color.Red, modifier = Modifier.padding(bottom = 8.dp))
-        }
-
+        Text(price, fontSize = 48.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
+        
         Spacer(modifier = Modifier.height(32.dp))
 
         // Graph
@@ -82,72 +74,48 @@ fun TokenDetailScreen(
                 .border(2.dp, MaterialTheme.colorScheme.onBackground)
                 .padding(16.dp)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val path = Path()
-                val w = size.width
-                val h = size.height
-                
-                // Simple random-ish looking line
-                path.moveTo(0f, h * 0.7f)
-                path.cubicTo(w * 0.2f, h * 0.9f, w * 0.4f, h * 0.2f, w * 0.6f, h * 0.5f)
-                path.cubicTo(w * 0.8f, h * 0.8f, w * 0.9f, h * 0.1f, w, h * 0.3f)
-
-                drawPath(
-                    path = path,
-                    color = color,
-                    style = Stroke(width = 4.dp.toPx())
-                )
-            }
-            Text("Growth Graph (7D)", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.align(Alignment.TopEnd))
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Contract Address
-        Text("Contract Address", fontSize = 12.sp, color = Color.Gray)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-                .border(1.dp, MaterialTheme.colorScheme.onBackground)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "0x71C...9A23", 
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(16.dp))
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // History
-        Text("Recent Transactions", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(5) { i ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(if (i % 2 == 0) "Received" else "Sent", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                        Text("Dec ${20-i}", fontSize = 10.sp, color = Color.Gray)
+            if (points.isNotEmpty()) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val path = Path()
+                    val w = size.width
+                    val h = size.height
+                    
+                    val max = points.maxOrNull() ?: 1.0
+                    val min = points.minOrNull() ?: 0.0
+                    val range = max - min
+                    
+                    points.forEachIndexed { i, p ->
+                        val x = (i.toFloat() / (points.size - 1)) * w
+                        // Invert Y because 0 is top
+                        val y = h - ((p - min).toFloat() / range.toFloat()) * h
+                        
+                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
                     }
-                    Text(
-                        "${if (i % 2 == 0) "+" else "-"}${10 + i * 2} $symbol", 
-                        fontWeight = FontWeight.Bold, 
-                        color = if (i % 2 == 0) Color(0xFF00C853) else Color.Red
+
+                    drawPath(
+                        path = path,
+                        color = trendColor,
+                        style = Stroke(width = 4.dp.toPx())
                     )
                 }
+            } else {
+                 Text("Loading Graph...", color = Color.Gray, modifier = Modifier.align(Alignment.Center))
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Description
+        Text("About $symbol", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            description, 
+            fontSize = 12.sp, 
+            lineHeight = 18.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Use Html text if needed, but plain text for now.
     }
 }

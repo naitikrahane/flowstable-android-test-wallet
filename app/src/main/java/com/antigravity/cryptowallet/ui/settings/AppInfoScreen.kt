@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
 import com.antigravity.cryptowallet.ui.theme.ThemeType
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun AppInfoScreen(
@@ -68,7 +69,7 @@ fun AppInfoScreen(
             items(themes) { theme ->
                 ThemeItem(
                     theme = theme,
-                    isSelected = viewModel.currentTheme == theme,
+                    isSelected = viewModel.currentTheme.collectAsState(initial = ThemeType.DEFAULT).value == theme,
                     onSelect = { viewModel.setTheme(theme) }
                 )
             }

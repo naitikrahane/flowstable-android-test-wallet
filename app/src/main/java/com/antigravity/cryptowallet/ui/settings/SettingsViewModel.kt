@@ -10,22 +10,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val sharedPreferences: android.content.SharedPreferences
+    private val themeRepository: com.antigravity.cryptowallet.data.repository.ThemeRepository
 ) : ViewModel() {
-    var currentTheme by mutableStateOf(getSavedTheme())
-        private set
+    
+    val currentTheme = themeRepository.currentTheme
 
     fun setTheme(theme: ThemeType) {
-        currentTheme = theme
-        sharedPreferences.edit().putString("app_theme", theme.name).apply()
-    }
-
-    private fun getSavedTheme(): ThemeType {
-        val themeName = sharedPreferences.getString("app_theme", ThemeType.DEFAULT.name)
-        return try {
-            ThemeType.valueOf(themeName ?: ThemeType.DEFAULT.name)
-        } catch (e: Exception) {
-            ThemeType.DEFAULT
-        }
+        themeRepository.setTheme(theme)
     }
 }
