@@ -25,7 +25,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         
         
         val startDestination = if (secureStorage.hasWallet()) {
-            if (secureStorage.hasPin()) "unlock" else "home"
+            if (secureStorage.hasPin()) "unlock" else "security_setup"
         } else {
             "intro"
         }

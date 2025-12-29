@@ -21,7 +21,7 @@ fun WalletApp(startDestination: String = "intro") {
         composable("create_wallet") {
             com.antigravity.cryptowallet.ui.onboarding.CreateWalletScreen(
                 onWalletCreated = {
-                    navController.navigate("home") {
+                    navController.navigate("security_setup") {
                         popUpTo("intro") { inclusive = true }
                     }
                 }
@@ -30,7 +30,7 @@ fun WalletApp(startDestination: String = "intro") {
         composable("import_wallet") {
             com.antigravity.cryptowallet.ui.onboarding.ImportWalletScreen(
                 onWalletImported = {
-                    navController.navigate("home") {
+                    navController.navigate("security_setup") {
                         popUpTo("intro") { inclusive = true }
                     }
                 }
@@ -44,6 +44,56 @@ fun WalletApp(startDestination: String = "intro") {
                 onNavigateToAppInfo = { navController.navigate("app_info") },
                 onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") },
                 onNavigateToWalletConnect = { navController.navigate("wallet_connect") }
+            )
+        }
+
+        composable("unlock") {
+            val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.UNLOCK,
+                onUnlock = {
+                    navController.navigate("home") {
+                        popUpTo("unlock") { inclusive = true }
+                    }
+                },
+                checkPin = { viewModel.checkPin(it) },
+                biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
+
+        composable("security_setup") {
+            val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.SETUP,
+                onPinSet = { pin ->
+                    viewModel.setPin(pin)
+                    navController.navigate("home") {
+                        popUpTo("security_setup") { inclusive = true }
+                    }
+                },
+                onUnlock = {}
+            )
+        }
+
+        composable("reveal_seed_verify") {
+            val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            com.antigravity.cryptowallet.ui.security.LockScreen(
+                mode = com.antigravity.cryptowallet.ui.security.LockMode.UNLOCK,
+                onUnlock = {
+                    navController.navigate("reveal_seed") {
+                        popUpTo("reveal_seed_verify") { inclusive = true }
+                    }
+                },
+                checkPin = { viewModel.checkPin(it) },
+                biometricEnabled = viewModel.isBiometricEnabled()
+            )
+        }
+
+        composable("reveal_seed") {
+            val viewModel: com.antigravity.cryptowallet.ui.security.SecurityViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            com.antigravity.cryptowallet.ui.security.ShowSeedScreen(
+                mnemonic = viewModel.getMnemonic(),
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -63,6 +113,29 @@ fun WalletApp(startDestination: String = "intro") {
                     navController.navigate("transaction_success/$amount/$sym/$recipient")
                 },
                 initialSymbol = symbol
+            )
+        }
+
+        composable(
+            route = "transaction_success/{amount}/{symbol}/{recipient}",
+            arguments = listOf(
+                androidx.navigation.navArgument("amount") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("recipient") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val amount = backStackEntry.arguments?.getString("amount") ?: ""
+            val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
+            val recipient = backStackEntry.arguments?.getString("recipient") ?: ""
+            com.antigravity.cryptowallet.ui.wallet.TransactionSuccessScreen(
+                amount = amount,
+                symbol = symbol,
+                recipient = recipient,
+                onDone = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
             )
         }
 
