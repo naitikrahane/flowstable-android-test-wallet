@@ -35,7 +35,7 @@ class AssetRepository @Inject constructor(
         // 1. Ensure Defaults
         val savedTokens = tokenDao.getAllTokens().first()
         if (savedTokens.isEmpty()) {
-            tokenDao.insertToken(TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7", decimals = 6, chainId = "eth"))
+            tokenDao.insertToken(TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7", decimals = 6, chainId = "eth", coingeckoId = "tether"))
         }
         val allTokens = tokenDao.getAllTokens().first()
 
