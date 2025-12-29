@@ -6,6 +6,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import androidx.room.Room
 import com.antigravity.cryptowallet.data.api.CoinGeckoApi
+import com.antigravity.cryptowallet.data.api.ExplorerApi
 import com.antigravity.cryptowallet.data.db.AppDatabase
 import com.antigravity.cryptowallet.data.db.TokenDao
 import retrofit2.Retrofit
@@ -76,5 +77,22 @@ object AppModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(CoinGeckoApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExplorerApi(): ExplorerApi {
+        val logging = HttpLoggingInterceptor()
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+        val client = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl("https://api.etherscan.io/") // Default to Etherscan; in production this would be dynamic per chain
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ExplorerApi::class.java)
     }
 }
