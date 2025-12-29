@@ -57,16 +57,10 @@ fun ShowSeedScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
         
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(BrutalBlack)
-                .padding(16.dp)
-                .clickable { onBack() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("DONE", color = BrutalWhite, fontWeight = FontWeight.Black)
-        }
+        com.antigravity.cryptowallet.ui.components.BrutalistButton(
+            text = "DONE",
+            onClick = { onBack() }
+        )
     }
 }
 

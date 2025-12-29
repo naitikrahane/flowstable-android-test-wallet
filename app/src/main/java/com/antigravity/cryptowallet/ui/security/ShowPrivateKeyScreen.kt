@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,7 +44,8 @@ fun ShowPrivateKeyScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, BrutalBlack)
+                .border(2.dp, BrutalBlack, RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color.White)
                 .padding(16.dp)
         ) {
@@ -59,15 +62,9 @@ fun ShowPrivateKeyScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
         
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(BrutalBlack)
-                .padding(16.dp)
-                .clickable { onBack() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("DONE", color = BrutalWhite, fontWeight = FontWeight.Black)
-        }
+        com.antigravity.cryptowallet.ui.components.BrutalistButton(
+            text = "DONE",
+            onClick = { onBack() }
+        )
     }
 }
