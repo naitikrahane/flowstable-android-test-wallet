@@ -6,11 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,22 +45,37 @@ fun ShowPrivateKeyScreen(
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        Box(
+        val clipboardManager = LocalClipboardManager.current
+        val fullKey = if (privateKey.startsWith("0x")) privateKey else "0x$privateKey"
+
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(2.dp, BrutalBlack, RoundedCornerShape(12.dp))
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.White)
-                .padding(16.dp)
+                .clickable { 
+                    clipboardManager.setText(AnnotatedString(fullKey))
+                }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (privateKey.startsWith("0x")) privateKey else "0x$privateKey",
-                fontSize = 16.sp,
+                text = fullKey,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = BrutalBlack,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                modifier = Modifier.fillMaxWidth(),
-                overflow = androidx.compose.ui.text.style.TextOverflow.Visible
+                modifier = Modifier.weight(1f),
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                maxLines = 2
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Default.ContentCopy,
+                contentDescription = "Copy",
+                tint = BrutalBlack,
+                modifier = Modifier.size(20.dp)
             )
         }
 

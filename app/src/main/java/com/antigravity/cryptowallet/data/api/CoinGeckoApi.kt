@@ -27,6 +27,13 @@ interface CoinGeckoApi {
         @Query("days") days: String = "7"
     ): com.antigravity.cryptowallet.data.models.MarketChartResponse
 
+    @GET("coins/{id}/ohlc")
+    suspend fun getCoinOHLC(
+        @retrofit2.http.Path("id") id: String,
+        @Query("vs_currency") vsCurrency: String = "usd",
+        @Query("days") days: String = "365"
+    ): List<List<Double>> // [timestamp, open, high, low, close]
+
     @GET("coins/{id}")
     suspend fun getCoinInfo(
         @retrofit2.http.Path("id") id: String,

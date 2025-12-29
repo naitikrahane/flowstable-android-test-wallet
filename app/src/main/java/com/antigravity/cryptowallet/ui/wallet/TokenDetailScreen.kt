@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.geometry.Size
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -91,41 +92,71 @@ fun TokenDetailScreen(
         
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Graph
+        // Graph Section
+        val ohlc = viewModel.ohlcData
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(220.dp)
                 .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp)) // Added clip for consistency
-                .padding(16.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(if (MaterialTheme.colorScheme.surface == Color.White) Color.White else Color(0xFF121212))
+                .padding(12.dp)
         ) {
-            if (points.isNotEmpty()) {
+            if (ohlc.isNotEmpty()) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val path = Path()
                     val w = size.width
                     val h = size.height
                     
-                    val max = points.maxOrNull() ?: 1.0
-                    val min = points.minOrNull() ?: 0.0
-                    val range = max - min
+                    val maxOverall = ohlc.maxOf { it[2] } // High
+                    val minOverall = ohlc.minOf { it[3] } // Low
+                    val range = (maxOverall - minOverall).coerceAtLeast(0.0001)
                     
-                    points.forEachIndexed { i, p ->
-                        val x = (i.toFloat() / (points.size - 1)) * w
-                        // Invert Y because 0 is top
-                        val y = h - ((p - min).toFloat() / range.toFloat()) * h
+                    val candleWidth = w / ohlc.size
+                    val spacing = candleWidth * 0.2f
+                    
+                    ohlc.forEachIndexed { i, candle ->
+                        // [timestamp, open, high, low, close]
+                        val open = candle[1]
+                        val high = candle[2]
+                        val low = candle[3]
+                        val close = candle[4]
                         
-                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                        val isGreen = close >= open
+                        val color = if (isGreen) Color(0xFF00C853) else Color.Red
+                        
+                        val x = i * candleWidth + spacing / 2
+                        
+                        // Normalize Y
+                        fun normalize(v: Double) = h - ((v - minOverall).toFloat() / range.toFloat()) * h
+                        
+                        val yHigh = normalize(high)
+                        val yLow = normalize(low)
+                        val yOpen = normalize(open)
+                        val yClose = normalize(close)
+                        
+                        // Draw Wick
+                        drawLine(
+                            color = color,
+                            start = Offset(x + (candleWidth - spacing) / 2, yHigh),
+                            end = Offset(x + (candleWidth - spacing) / 2, yLow),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                        
+                        // Draw Candle Body
+                        val top = kotlin.math.min(yOpen, yClose)
+                        val bottom = kotlin.math.max(yOpen, yClose)
+                        val rectHeight = (bottom - top).coerceAtLeast(1f)
+                        
+                        drawRect(
+                            color = color,
+                            topLeft = Offset(x, top),
+                            size = Size(candleWidth - spacing, rectHeight)
+                        )
                     }
-
-                    drawPath(
-                        path = path,
-                        color = trendColor,
-                        style = Stroke(width = 4.dp.toPx())
-                    )
                 }
             } else {
-                 Text("Loading Graph...", color = Color.Gray, modifier = Modifier.align(Alignment.Center))
+                 Text("Loading 1Y Chart...", color = Color.Gray, modifier = Modifier.align(Alignment.Center))
             }
         }
 

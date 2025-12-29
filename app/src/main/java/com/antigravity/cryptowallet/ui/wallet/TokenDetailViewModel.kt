@@ -41,6 +41,9 @@ class TokenDetailViewModel @Inject constructor(
 
     var graphPoints by mutableStateOf<List<Double>>(emptyList())
         private set
+    
+    var ohlcData by mutableStateOf<List<List<Double>>>(emptyList())
+        private set
 
     var transactions by mutableStateOf<List<TransactionEntity>>(emptyList())
         private set
@@ -134,32 +137,44 @@ class TokenDetailViewModel @Inject constructor(
                 }
             }
 
-            // Fetch Chart and Initial Price
+            // Fetch Chart, OHLC and Initial Price
             launch {
                 try {
-                    val chart = coinRepository.getMarketChart(id)
-                    graphPoints = chart.prices.map { it[1] }
+                    // Fetch OHLC for Candlestick (1 year = 365 days)
+                    ohlcData = coinRepository.getOHLC(id, "365")
                     
-                    val currentPrice = graphPoints.lastOrNull() ?: 0.0
-                    price = if (currentPrice > 0) String.format("$%.2f", currentPrice) else "Error"
+                    // Also fetch regular chart for trend/price if needed (optional, using OHLC close instead)
+                    if (ohlcData.isNotEmpty()) {
+                        val lastCandle = ohlcData.last()
+                        graphPoints = ohlcData.map { it[4] } // Use close prices for mini-trend
+                        price = String.format("$%.2f", lastCandle[4])
+                    }
+
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    // Fallback to Simple Price if Chart fails
+                    // Fallback to regular chart if OHLC fails
                     try {
-                        val priceMap = coinRepository.api.getSimplePrice(id)
-                        val simplePrice = priceMap[id]?.get("usd") ?: 0.0
-                        if (simplePrice > 0) {
-                            price = String.format("$%.2f", simplePrice)
-                        } else {
-                            price = "N/A"
-                        }
+                        val chart = coinRepository.getMarketChart(id)
+                        graphPoints = chart.prices.map { it[1] }
+                        val currentPrice = graphPoints.lastOrNull() ?: 0.0
+                        price = String.format("$%.2f", currentPrice)
                     } catch (e2: Exception) {
-                        price = "Error"
+                         // Fallback to Simple Price if Chart fails
+                        try {
+                            val priceMap = coinRepository.api.getSimplePrice(id)
+                            val simplePrice = priceMap[id]?.get("usd") ?: 0.0
+                            price = if (simplePrice > 0) String.format("$%.2f", simplePrice) else "N/A"
+                        } catch (e3: Exception) {
+                            price = "Error"
+                        }
                     }
                     
-                    // Generate mock graph points if chart fails so UI isn't empty
-                    if (graphPoints.isEmpty()) {
-                        graphPoints = List(20) { 10.0 + Math.random() * 5.0 }
+                    // Generate mock OHLC data if everything fails so UI isn't empty
+                    if (ohlcData.isEmpty()) {
+                        ohlcData = List(30) { i ->
+                            val base = 100.0 + Math.random() * 20.0
+                            listOf(i.toDouble(), base, base + 5, base - 5, base + 2)
+                        }
                     }
                 }
             }

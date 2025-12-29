@@ -13,6 +13,10 @@ class CoinRepository @Inject constructor(
     suspend fun getMarketChart(id: String, days: String = "7"): MarketChartResponse {
         return api.getCoinMarketChart(id, days = days)
     }
+    
+    suspend fun getOHLC(id: String, days: String = "365"): List<List<Double>> {
+        return api.getCoinOHLC(id, days = days)
+    }
 
     suspend fun getCoinInfo(id: String): CoinInfoResponse {
         return api.getCoinInfo(id)
