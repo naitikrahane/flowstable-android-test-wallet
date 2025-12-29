@@ -264,7 +264,16 @@ fun BrowserScreen(
                                 text = "Confirm",
                                 onClick = {
                                     // Handle logic based on method
-                                    handleWeb3Request(request, bridgeInstance, walletRepository)
+                                    handleWeb3Request(request, bridgeInstance, walletRepository) { targetChainId ->
+                                        val targetNet = viewModel.networks.find { it.chainId == targetChainId }
+                                        if (targetNet != null) {
+                                            viewModel.switchNetwork(targetNet.id)
+                                            activeNetwork = viewModel.activeNetwork
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }
                                     pendingRequest = null
                                 },
                                 modifier = Modifier.weight(1f)
@@ -301,7 +310,8 @@ fun BrowserScreen(
 private fun handleWeb3Request(
     request: Web3Bridge.Web3Request,
     bridge: Web3Bridge?,
-    walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository
+    walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository,
+    onSwitchNetwork: (Long) -> Boolean
 ) {
     val credentials = walletRepository.activeCredentials ?: return
     
@@ -334,18 +344,9 @@ private fun handleWeb3Request(
                 val targetChainIdHex = paramObj.getString("chainId")
                 val targetChainId = java.lang.Long.decode(targetChainIdHex)
                 
-                // Find network
-                val targetNet = viewModel.networks.find { it.chainId == targetChainId }
+                val success = onSwitchNetwork(targetChainId)
                 
-                if (targetNet != null) {
-                    viewModel.switchNetwork(targetNet.id)
-                    // We need to update local state immediately for the bridge to see it
-                    // NOTE: activeNetwork is a state that will be updated by LaunchedEffect or similar if we were observing ViewModel fully.
-                    // But here we set it manually to match
-                    // Ideally we'd callback to the composable content, but we can't easily here without refactor.
-                    // Assuming viewModel.activeNetwork is updated, we need to reflect it in the UI/Bridge provider.
-                    // The UI state 'activeNetwork' variable in BrowserScreen needs to be updated. Not accessible easily here.
-                    // FIX: We need to pass a callback to handleWeb3Request or move this logic inline.
+                if (success) {
                     bridge?.sendResponse(request.id, "null")
                 } else {
                      bridge?.sendError(request.id, "Chain ID $targetChainId not supported")
