@@ -2,25 +2,28 @@ package com.antigravity.cryptowallet.ui.browser
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -29,23 +32,26 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.antigravity.cryptowallet.ui.components.BrutalistHeader
 import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.antigravity.cryptowallet.data.wallet.WalletRepository
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.clickable
-import com.antigravity.cryptowallet.ui.components.BrutalistHeader
+data class DApp(
+    val name: String,
+    val description: String,
+    val url: String,
+    val iconChar: Char,
+    val category: String
+)
 
 @Composable
 fun BrowserScreen(
     viewModel: BrowserViewModel = hiltViewModel()
 ) {
     val walletRepository = viewModel.walletRepository
-    var url by remember { mutableStateOf("https://pancakeswap.finance") }
-    var inputUrl by remember { mutableStateOf("https://pancakeswap.finance") }
+    var url by remember { mutableStateOf("") } // Empty URL means Home
+    var inputUrl by remember { mutableStateOf("") }
     var webView: WebView? by remember { mutableStateOf(null) }
     
     val address = walletRepository.getAddress()
@@ -55,6 +61,29 @@ fun BrowserScreen(
     var pendingRequest by remember { mutableStateOf<Web3Bridge.Web3Request?>(null) }
     var bridgeInstance by remember { mutableStateOf<Web3Bridge?>(null) }
     var showNetworkSelector by remember { mutableStateOf(false) }
+
+    // DApp List
+    val dapps = listOf(
+        DApp("PancakeSwap", "Top DEX on BNB", "https://pancakeswap.finance", 'P', "DEFI"),
+        DApp("Uniswap", "World's largest DEX", "https://app.uniswap.org", 'U', "DEFI"),
+        DApp("Sushi", "DeFi Market", "https://www.sushi.com", 'S', "DEFI"),
+        DApp("Blockscan", "Explore multiple chains", "https://blockscan.com", 'B', "UTILITIES"),
+        DApp("Debank", "Portfolio Tracker", "https://debank.com", 'D', "UTILITIES"),
+        DApp("Revoke", "Manage allowances", "https://revoke.cash", 'R', "UTILITIES"),
+        DApp("Lens", "Web3 Social", "https://www.lens.xyz", 'L', "SOCIAL")
+    )
+    
+    val groupedDapps = dapps.groupBy { it.category }
+
+    // Handle Back Press to go Home
+    BackHandler(enabled = url.isNotEmpty()) {
+        if (webView?.canGoBack() == true) {
+            webView?.goBack()
+        } else {
+            url = "" // Go home
+            inputUrl = ""
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -96,7 +125,7 @@ fun BrowserScreen(
             }
         }
 
-        // Top Bar with Network Selector
+        // Top Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,7 +135,10 @@ fun BrowserScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("BROWSER", color = BrutalWhite, fontWeight = FontWeight.Black)
+            IconButton(onClick = { url = ""; inputUrl = "" }) {
+                Icon(Icons.Default.Home, contentDescription = "Home", tint = BrutalWhite)
+            }
+            
             Row(
                 modifier = Modifier
                     .border(1.dp, BrutalWhite)
@@ -138,74 +170,120 @@ fun BrowserScreen(
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = {
-                    url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
+                    if (inputUrl.isNotEmpty()) {
+                        url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
+                    }
                 }),
                 singleLine = true,
                 cursorBrush = SolidColor(BrutalBlack),
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 8.dp),
+                decorationBox = { innerTextField ->
+                     if (inputUrl.isEmpty()) {
+                         Text("Search or type URL", color = Color.Gray)
+                     }
+                     innerTextField()
+                }
             )
             IconButton(onClick = {
-                url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
+                if (inputUrl.isNotEmpty()) {
+                    url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
+                }
             }) {
                 Icon(Icons.Default.Search, contentDescription = "Go", tint = BrutalBlack)
             }
         }
 
-        // WebView
+        // Content
         Box(modifier = Modifier.weight(1f)) {
-            AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.databaseEnabled = true
-                        settings.loadWithOverviewMode = true
-                        settings.useWideViewPort = true
-                        
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                        }
-                        
-                        val bridge = Web3Bridge(this, address, { activeNetwork.chainId }) { request ->
-                            pendingRequest = request
-                        }
-                        bridgeInstance = bridge
-                        addJavascriptInterface(bridge, "androidWallet")
-                        
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                                super.onPageStarted(view, url, favicon)
-                                // We re-create the bridge in fact because chainId might change
-                                val currentBridge = Web3Bridge(view!!, address, { activeNetwork.chainId }) { request ->
-                                    pendingRequest = request
+            if (url.isEmpty()) {
+                // Discover DApps Home
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    item {
+                        Text(
+                            "DISCOVER DAPPS", 
+                            fontSize = 32.sp, 
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.padding(bottom = 24.dp)
+                        )
+                    }
+                    
+                    groupedDapps.forEach { (category, items) ->
+                        item {
+                            Text(category, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.padding(bottom = 24.dp)
+                            ) {
+                                items(items) { dapp ->
+                                    DAppCard(dapp) {
+                                        url = dapp.url
+                                        inputUrl = dapp.url
+                                    }
                                 }
-                                bridgeInstance = currentBridge
-                                view.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                            }
+                        }
+                    }
+                }
+            } else {
+                // WebView
+                AndroidView(
+                    factory = { context ->
+                        WebView(context).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.databaseEnabled = true
+                            settings.loadWithOverviewMode = true
+                            settings.useWideViewPort = true
+                            
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                                settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                             }
                             
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                super.onPageFinished(view, url)
-                                if (url != null) inputUrl = url
-                                bridgeInstance?.let { view?.evaluateJavascript(it.getInjectionJs(), null) }
+                            val bridge = Web3Bridge(this, address, { activeNetwork.chainId }) { request ->
+                                pendingRequest = request
                             }
+                            bridgeInstance = bridge
+                            addJavascriptInterface(bridge, "androidWallet")
+                            
+                            webViewClient = object : WebViewClient() {
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                    super.onPageStarted(view, url, favicon)
+                                    // We re-create the bridge in fact because chainId might change
+                                    val currentBridge = Web3Bridge(view!!, address, { activeNetwork.chainId }) { request ->
+                                        pendingRequest = request
+                                    }
+                                    bridgeInstance = currentBridge
+                                    view.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                                }
+                                
+                                override fun onPageFinished(view: WebView?, url: String?) {
+                                    super.onPageFinished(view, url)
+                                    if (url != null) inputUrl = url
+                                    bridgeInstance?.let { view?.evaluateJavascript(it.getInjectionJs(), null) }
+                                }
+                            }
+                            
+                            webChromeClient = android.webkit.WebChromeClient()
+                            loadUrl(url)
+                            webView = this
                         }
-                        
-                        webChromeClient = android.webkit.WebChromeClient()
-                        loadUrl(url)
-                        webView = this
-                    }
-                },
-                update = {
-                    if (it.url != url) {
-                        it.loadUrl(url)
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
+                    },
+                    update = {
+                        if (it.url != url && url.isNotEmpty()) {
+                            it.loadUrl(url)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-            // Confirmation Overlay
+            // Confirmation Overlay (Same as before)
             pendingRequest?.let { request ->
                 Box(
                     modifier = Modifier
@@ -284,24 +362,53 @@ fun BrowserScreen(
             }
         }
 
-        // Navigation Controls
-        Row(
+        // Navigation Controls (Only show if URL is active)
+        if (url.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(2.dp, BrutalBlack)
+                    .background(BrutalWhite)
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                IconButton(onClick = { webView?.goBack() }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = BrutalBlack)
+                }
+                IconButton(onClick = { webView?.reload() }) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = BrutalBlack)
+                }
+                IconButton(onClick = { webView?.goForward() }) {
+                    Icon(Icons.Default.ArrowForward, contentDescription = "Forward", tint = BrutalBlack)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DAppCard(dapp: DApp, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .width(140.dp)
+            .height(160.dp)
+            .border(2.dp, BrutalBlack)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .border(2.dp, BrutalBlack)
-                .background(BrutalWhite)
-                .padding(4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .size(40.dp)
+                .background(BrutalBlack),
+            contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = { webView?.goBack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = BrutalBlack)
-            }
-            IconButton(onClick = { webView?.reload() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = BrutalBlack)
-            }
-            IconButton(onClick = { webView?.goForward() }) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Forward", tint = BrutalBlack)
-            }
+            Text(dapp.iconChar.toString(), color = BrutalWhite, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        }
+        
+        Column {
+            Text(dapp.name, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(dapp.description, fontSize = 10.sp, color = Color.Gray, lineHeight = 12.sp, maxLines = 2)
         }
     }
 }
@@ -366,3 +473,4 @@ private fun handleWeb3Request(
         }
     }
 }
+
