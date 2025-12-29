@@ -132,32 +132,17 @@ class WalletViewModel @Inject constructor(
         }
         
         if (filtered.isEmpty()) {
-            assets = generateMockAssets(activeNetwork)
+            // assets = emptyList() // or keep empty
         } else {
-             assets = if (filtered.size < 2) filtered + generateMockAssets(activeNetwork) else filtered
+             assets = filtered
              
              val total = assets.sumByDouble { it.rawBalance * it.price }
              totalBalanceUsd = String.format("$%.2f", total)
         }
     }
 
-    private fun generateMockAssets(network: com.antigravity.cryptowallet.data.blockchain.Network): List<com.antigravity.cryptowallet.data.models.AssetUiModel> {
-        val list = mutableListOf<com.antigravity.cryptowallet.data.models.AssetUiModel>()
-        
-        if (network.symbol == "ETH") {
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("eth-native", "ETH", "Ethereum", "1.24", "$2,780.45", null, network.name, 1.24, 2245.12))
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("eth-usdt", "USDT", "Tether", "500.00", "$500.00", null, network.name, 500.0, 1.0))
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("eth-usdc", "USDC", "USD Coin", "120.50", "$120.50", null, network.name, 120.5, 1.0))
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("eth-link", "LINK", "Chainlink", "45.00", "$652.50", null, network.name, 45.0, 14.50))
-        } else if (network.symbol == "BNB") {
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("bnb-native", "BNB", "BNB Chain", "5.45", "$1,702.34", null, network.name, 5.45, 312.45))
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("bnb-usdt", "USDT", "Tether", "120.00", "$120.00", null, network.name, 120.0, 1.0))
-            list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("bnb-cake", "CAKE", "PancakeSwap", "200.00", "$540.00", null, network.name, 200.0, 2.70))
-        } else {
-             list.add(com.antigravity.cryptowallet.data.models.AssetUiModel("gen-native", network.symbol, network.name, "0.00", "$0.00", null, network.name, 0.0, 0.0))
-        }
-        return list
-    }
+    // Mock generation removed
+
 }
 
 @Composable

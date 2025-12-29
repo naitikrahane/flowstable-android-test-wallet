@@ -28,6 +28,7 @@ import com.antigravity.cryptowallet.ui.wallet.TokenDetailViewModel
 fun TokenDetailScreen(
     symbol: String,
     onBack: () -> Unit,
+    onNavigateToSend: () -> Unit,
     viewModel: TokenDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     LaunchedEffect(symbol) {
@@ -38,6 +39,7 @@ fun TokenDetailScreen(
     val description = viewModel.description
     val contractAddress = viewModel.contractAddress
     val points = viewModel.graphPoints
+    val transactions = viewModel.transactions
     
     // Determine color based on trend
     val isPositive = if (points.size > 1) points.last() >= points.first() else true
@@ -146,6 +148,56 @@ fun TokenDetailScreen(
             lineHeight = 18.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
         )
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Actions
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            com.antigravity.cryptowallet.ui.components.BrutalistButton(
+                text = "Send",
+                onClick = onNavigateToSend,
+                modifier = Modifier.weight(1f)
+            )
+            com.antigravity.cryptowallet.ui.components.BrutalistButton(
+                text = "Receive",
+                onClick = { /* Show Receive Dialog */ },
+                modifier = Modifier.weight(1f),
+                inverted = true
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // History
+        Text("Transaction History", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        if (transactions.isEmpty()) {
+            Text("No transactions found", color = Color.Gray, fontSize = 12.sp)
+        } else {
+            transactions.forEach { tx ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.onBackground)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(if (tx.type == "send") "Sent" else "Received", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                        Text(tx.hash.take(8) + "...", fontSize = 10.sp, color = Color.Gray)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("${tx.value} $symbol", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                        Text(tx.status, fontSize = 10.sp, color = if (tx.status == "success") Color(0xFF00C853) else Color.Red)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+        
         Spacer(modifier = Modifier.height(24.dp))
         
         // Use Html text if needed, but plain text for now.

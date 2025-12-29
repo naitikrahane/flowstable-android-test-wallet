@@ -6,14 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.antigravity.cryptowallet.data.repository.CoinRepository
+import com.antigravity.cryptowallet.data.wallet.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class TokenDetailViewModel @Inject constructor(
-    private val coinRepository: CoinRepository
+    private val coinRepository: CoinRepository,
+    private val transactionRepository: TransactionRepository,
+    private val walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository
 ) : ViewModel() {
+
+    val address: String
+        get() = walletRepository.getAddress()
 
     var description by mutableStateOf("Loading...")
         private set
@@ -27,7 +33,20 @@ class TokenDetailViewModel @Inject constructor(
     var graphPoints by mutableStateOf<List<Double>>(emptyList())
         private set
 
+    var transactions by mutableStateOf<List<com.antigravity.cryptowallet.data.db.TransactionEntity>>(emptyList())
+        private set
+    
+    private var currentSymbol: String = ""
+
     fun loadTokenData(symbol: String) {
+        currentSymbol = symbol
+        // Observe transactions locally filtered by symbol
+        viewModelScope.launch {
+            transactionRepository.transactions.collect { allTxs ->
+                transactions = allTxs.filter { it.symbol.equals(symbol, ignoreCase = true) }
+            }
+        }
+        
         val id = when(symbol.uppercase()) {
             "ETH" -> "ethereum"
             "BNB" -> "binancecoin"

@@ -32,6 +32,7 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 fun TransferScreen(
     onBack: () -> Unit,
     onTransactionSuccess: (String, String, String) -> Unit,
+    initialSymbol: String? = null,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
     var step by remember { mutableStateOf(0) } // 0: Select Asset, 1: Enter Details
@@ -48,6 +49,16 @@ fun TransferScreen(
         if (viewModel.assets.isEmpty()) {
             // Trigger refresh if needed, though init block usually handles it.
             // We can assume the ViewModel is fetching.
+        }
+    }
+    
+    // Auto-select asset
+    LaunchedEffect(viewModel.assets, initialSymbol) {
+        if (initialSymbol != null && selectedAsset == null && viewModel.assets.isNotEmpty()) {
+            selectedAsset = viewModel.assets.find { it.symbol.equals(initialSymbol, ignoreCase = true) }
+            if (selectedAsset != null) {
+                step = 1
+            }
         }
     }
 
@@ -151,6 +162,23 @@ fun TransferScreen(
                     text = if (isSending) "Processing..." else "Send Now",
                     onClick = {
                         if (recipientAddress.isNotBlank() && amount.isNotBlank() && selectedAsset != null) {
+                            val evmRegex = Regex("^0x[a-fA-F0-9]{40}$")
+                            if (!evmRegex.matches(recipientAddress)) {
+                                errorMsg = "Invalid EVM Address"
+                                return@BrutalistButton
+                            }
+                            
+                            val amountVal = amount.toDoubleOrNull()
+                            if (amountVal == null || amountVal <= 0) {
+                                errorMsg = "Invalid Amount"
+                                return@BrutalistButton
+                            }
+                            
+                            if (amountVal > selectedAsset!!.rawBalance) {
+                                errorMsg = "Insufficient Balance (Max: ${selectedAsset!!.balance})"
+                                return@BrutalistButton
+                            }
+                            
                             scope.launch {
                                 isSending = true
                                 errorMsg = null

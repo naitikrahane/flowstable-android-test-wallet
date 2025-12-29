@@ -10,6 +10,16 @@ interface CoinGeckoApi {
         @Query("vs_currencies") vsCurrencies: String = "usd"
     ): Map<String, Map<String, Double>>
 
+    @GET("coins/markets")
+    suspend fun getCoinsMarkets(
+        @Query("vs_currency") vsCurrency: String = "usd",
+        @Query("ids") ids: String,
+        @Query("order") order: String = "market_cap_desc",
+        @Query("per_page") perPage: Int = 250,
+        @Query("page") page: Int = 1,
+        @Query("sparkline") sparkline: Boolean = false
+    ): List<com.antigravity.cryptowallet.data.models.CoinMarketItem>
+
     @GET("coins/{id}/market_chart")
     suspend fun getCoinMarketChart(
         @retrofit2.http.Path("id") id: String,
