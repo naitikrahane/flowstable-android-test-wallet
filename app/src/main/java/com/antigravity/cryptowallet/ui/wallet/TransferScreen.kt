@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +31,7 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 @Composable
 fun TransferScreen(
     onBack: () -> Unit,
+    onTransactionSuccess: (String, String, String) -> Unit,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
     var step by remember { mutableStateOf(0) } // 0: Select Asset, 1: Enter Details
@@ -37,6 +40,8 @@ fun TransferScreen(
     var amount by remember { mutableStateOf("") }
     var isSending by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
+    
+    val scope = rememberCoroutineScope()
     
     // Ensure assets are loaded
     LaunchedEffect(Unit) {
@@ -146,10 +151,15 @@ fun TransferScreen(
                     text = if (isSending) "Processing..." else "Send Now",
                     onClick = {
                         if (recipientAddress.isNotBlank() && amount.isNotBlank() && selectedAsset != null) {
-                            isSending = true
-                            errorMsg = null
-                            viewModel.sendAsset(selectedAsset!!, recipientAddress, amount)
-                             onBack()
+                            scope.launch {
+                                isSending = true
+                                errorMsg = null
+                                viewModel.sendAsset(selectedAsset!!, recipientAddress, amount)
+                                // Simulate network delay for "processing" feel
+                                delay(1500)
+                                isSending = false
+                                onTransactionSuccess(amount, selectedAsset!!.symbol, recipientAddress)
+                            }
                         } else {
                             errorMsg = "Please fill all fields"
                         }

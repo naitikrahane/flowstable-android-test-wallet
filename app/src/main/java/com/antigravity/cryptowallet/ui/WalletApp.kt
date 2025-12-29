@@ -104,6 +104,28 @@ fun WalletApp(startDestination: String = "intro") {
                 onUnlock = {}, // Not used in setup
                 biometricEnabled = false
             )
+        composable(
+            route = "transaction_success/{amount}/{symbol}/{recipient}",
+            arguments = listOf(
+                androidx.navigation.navArgument("amount") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("recipient") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val amount = backStackEntry.arguments?.getString("amount") ?: "0"
+            val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
+            val recipient = backStackEntry.arguments?.getString("recipient") ?: ""
+            
+            com.antigravity.cryptowallet.ui.wallet.TransactionSuccessScreen(
+                amount = amount,
+                symbol = symbol,
+                recipient = recipient,
+                onDone = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
