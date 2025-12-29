@@ -42,7 +42,8 @@ fun WalletApp(startDestination: String = "intro") {
                 onNavigateToRevealSeed = { navController.navigate("reveal_seed_verify") },
                 onNavigateToTransfer = { navController.navigate("transfer") },
                 onNavigateToAppInfo = { navController.navigate("app_info") },
-                onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") }
+                onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") },
+                onNavigateToWalletConnect = { navController.navigate("wallet_connect") }
             )
         }
 
@@ -62,6 +63,12 @@ fun WalletApp(startDestination: String = "intro") {
                     navController.navigate("transaction_success/$amount/$sym/$recipient")
                 },
                 initialSymbol = symbol
+            )
+        }
+
+        composable("wallet_connect") {
+            com.antigravity.cryptowallet.ui.walletconnect.WalletConnectScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 

@@ -29,7 +29,11 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 fun SettingsScreen(
     onSetupSecurity: () -> Unit,
     onViewSeedPhrase: () -> Unit,
-    onViewAppInfo: () -> Unit
+fun SettingsScreen(
+    onSetupSecurity: () -> Unit,
+    onViewSeedPhrase: () -> Unit,
+    onViewAppInfo: () -> Unit,
+    onWalletConnect: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -62,7 +66,7 @@ fun SettingsScreen(
                     title = "Wallet Connect",
                     subtitle = "Connect to dApps",
                     icon = androidx.compose.material.icons.filled.QrCodeScanner,
-                    onClick = { /* TODO: Open WC Scanner */ }
+                    onClick = onWalletConnect
                 )
                 SettingsItem(
                     title = "About & Appearance",

@@ -31,7 +31,10 @@ fun MainScreen(
     onNavigateToRevealSeed: () -> Unit,
     onNavigateToTransfer: () -> Unit,
     onNavigateToAppInfo: () -> Unit,
-    onNavigateToTokenDetail: (String) -> Unit
+    onNavigateToTransfer: () -> Unit,
+    onNavigateToAppInfo: () -> Unit,
+    onNavigateToTokenDetail: (String) -> Unit,
+    onNavigateToWalletConnect: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -83,7 +86,8 @@ fun MainScreen(
                 com.antigravity.cryptowallet.ui.settings.SettingsScreen(
                     onSetupSecurity = onNavigateToSecuritySetup,
                     onViewSeedPhrase = onNavigateToRevealSeed,
-                    onViewAppInfo = onNavigateToAppInfo
+                    onViewAppInfo = onNavigateToAppInfo,
+                    onWalletConnect = onNavigateToWalletConnect
                 )
             }
         }
