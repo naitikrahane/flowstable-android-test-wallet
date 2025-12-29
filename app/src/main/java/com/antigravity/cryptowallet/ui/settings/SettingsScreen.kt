@@ -62,7 +62,7 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "Wallet Connect",
                     subtitle = "Connect to dApps",
-                    icon = Icons.Default.QrCodeScanner,
+                    icon = Icons.Filled.QrCodeScanner,
                     onClick = onWalletConnect
                 )
                 SettingsItem(
