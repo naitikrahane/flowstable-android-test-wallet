@@ -326,6 +326,17 @@ private fun handleWeb3Request(
                 bridge?.sendError(request.id, e.message ?: "Signing failed")
             }
         }
+        "wallet_switchEthereumChain" -> {
+            try {
+                bridge?.sendResponse(request.id, "null") // Acknowledge switch
+            } catch (e: Exception) {
+                bridge?.sendError(request.id, "Switch failed")
+            }
+        }
+        "eth_requestPermissions" -> {
+             // Just accept for now
+             bridge?.sendResponse(request.id, "[{\"parentCapability\": \"eth_accounts\"}]")
+        }
         "eth_sendTransaction" -> {
             // For now, we mock success for the browser to keep flow going, 
             // In a real one we'd use BlockchainService to send raw transaction.

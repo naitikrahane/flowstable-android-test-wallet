@@ -17,6 +17,6 @@ interface TokenDao {
     @Query("SELECT * FROM tokens WHERE id = :id")
     suspend fun getTokenById(id: Long): TokenEntity?
 
-    @Query("DELETE FROM tokens WHERE contractAddress = :address")
-    suspend fun deleteToken(address: String)
+    @Query("SELECT * FROM tokens WHERE symbol = :symbol LIMIT 1")
+    suspend fun getTokenBySymbol(symbol: String): TokenEntity?
 }

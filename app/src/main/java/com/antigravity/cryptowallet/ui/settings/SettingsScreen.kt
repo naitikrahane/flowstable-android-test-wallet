@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,12 @@ fun SettingsScreen(
 
             item {
                 SettingsSection("App")
+                SettingsItem(
+                    title = "Wallet Connect",
+                    subtitle = "Connect to dApps",
+                    icon = androidx.compose.material.icons.filled.QrCodeScanner,
+                    onClick = { /* TODO: Open WC Scanner */ }
+                )
                 SettingsItem(
                     title = "About & Appearance",
                     subtitle = "Version, Theme, Info",

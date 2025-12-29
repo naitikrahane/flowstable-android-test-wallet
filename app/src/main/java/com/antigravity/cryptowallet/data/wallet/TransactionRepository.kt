@@ -20,11 +20,11 @@ class TransactionRepository @Inject constructor(
 
     suspend fun refreshTransactions(address: String, network: Network) = withContext(Dispatchers.IO) {
         try {
-            // Mapping network IDs to their respective explorer API URLs should ideally be in NetworkRepository
-            // For now, let's use a simplified approach since we don't have multiple API bases yet.
-            // Assumption: The Retrofit instance for explorerApi is configured for the active network.
-            
-            val response = explorerApi.getTransactionList(address = address)
+            // Use dynamic explorer URL from Network
+            val response = explorerApi.getTransactionList(
+                url = network.explorerApiUrl,
+                address = address
+            )
             if (response.status == "1") {
                 val entities = response.result.map { tx ->
                     val valueEth = BigDecimal(tx.value).divide(BigDecimal.TEN.pow(18)).toPlainString()

@@ -5,8 +5,9 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface ExplorerApi {
-    @GET("api")
+    @GET
     suspend fun getTransactionList(
+        @retrofit2.http.Url url: String,
         @Query("module") module: String = "account",
         @Query("action") action: String = "txlist",
         @Query("address") address: String,

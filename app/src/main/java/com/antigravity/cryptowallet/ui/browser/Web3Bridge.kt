@@ -80,6 +80,9 @@ class Web3Bridge(
         
         webView.post {
             when (method) {
+                "wallet_switchEthereumChain" -> {
+                     onActionRequest(Web3Request(id, method, params))
+                }
                 "eth_requestAccounts", "eth_accounts" -> {
                     sendResponse(id, "[\"$address\"]")
                 }
@@ -93,6 +96,7 @@ class Web3Bridge(
                     onActionRequest(Web3Request(id, method, params))
                 }
                 else -> {
+                    // Try to respond null/error for unknowns to avoid hang
                     sendError(id, "Method $method not supported")
                 }
             }

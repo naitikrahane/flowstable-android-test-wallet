@@ -15,7 +15,8 @@ import javax.inject.Inject
 class TokenDetailViewModel @Inject constructor(
     private val coinRepository: CoinRepository,
     private val transactionRepository: TransactionRepository,
-    private val walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository
+    private val walletRepository: com.antigravity.cryptowallet.data.wallet.WalletRepository,
+    private val tokenDao: com.antigravity.cryptowallet.data.db.TokenDao
 ) : ViewModel() {
 
     val address: String
@@ -47,21 +48,25 @@ class TokenDetailViewModel @Inject constructor(
             }
         }
         
-        val id = when(symbol.uppercase()) {
-            "ETH" -> "ethereum"
-            "BNB" -> "binancecoin"
-            "BTC" -> "bitcoin"
-            "USDT" -> "tether"
-            "USDC" -> "usd-coin"
-            "LINK" -> "chainlink"
-            "CAKE" -> "pancakeswap-token"
-            else -> "ethereum" // Fallback
-        }
-
         viewModelScope.launch {
             try {
+                // Resolve Coingecko ID dynamically
+                val tokenEntity = tokenDao.getTokenBySymbol(symbol)
+                val id = tokenEntity?.coingeckoId ?: when(symbol.uppercase()) {
+                    "ETH" -> "ethereum"
+                    "BNB" -> "binancecoin"
+                    "BTC" -> "bitcoin"
+                    "USDT" -> "tether"
+                    "USDC" -> "usd-coin"
+                    "LINK" -> "chainlink"
+                    "CAKE" -> "pancakeswap-token"
+                    "MATIC", "POL" -> "matic-network"
+                    else -> "ethereum" // Fallback
+                }
+                
                 // Fetch Info
                 val info = coinRepository.getCoinInfo(id)
+                // ...
                 // Filter out HTML tags from description if present
                 val rawDescription = info.description.en
                 description = rawDescription.replace(Regex("<.*?>"), "") 
