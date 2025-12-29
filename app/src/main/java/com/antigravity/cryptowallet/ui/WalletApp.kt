@@ -47,7 +47,10 @@ fun WalletApp(startDestination: String = "intro") {
 
         composable("transfer") {
             com.antigravity.cryptowallet.ui.wallet.TransferScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onTransactionSuccess = { amount, symbol, recipient ->
+                    navController.navigate("transaction_success/$amount/$symbol/$recipient")
+                }
             )
         }
 
