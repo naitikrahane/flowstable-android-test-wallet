@@ -37,16 +37,24 @@ fun TransferScreen(
     var amount by remember { mutableStateOf("") }
     var isSending by remember { mutableStateOf(false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
+    
+    // Ensure assets are loaded
+    LaunchedEffect(Unit) {
+        if (viewModel.assets.isEmpty()) {
+            // Trigger refresh if needed, though init block usually handles it.
+            // We can assume the ViewModel is fetching.
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BrutalWhite)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (step > 0) step-- else onBack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = BrutalBlack)
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
             }
             BrutalistHeader(if (step == 0) "Select Token" else "Send ${selectedAsset?.symbol}")
         }
@@ -54,13 +62,19 @@ fun TransferScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         if (step == 0) {
-            AssetSelector(
-                assets = viewModel.assets,
-                onSelected = {
-                    selectedAsset = it
-                    step = 1
-                }
-            )
+            if (viewModel.assets.isEmpty()) {
+                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                     Text("Loading Assets...", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                 }
+            } else {
+                AssetSelector(
+                    assets = viewModel.assets,
+                    onSelected = {
+                        selectedAsset = it
+                        step = 1
+                    }
+                )
+            }
         } else {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -71,17 +85,17 @@ fun TransferScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(2.dp, BrutalBlack)
+                            .border(2.dp, MaterialTheme.colorScheme.onBackground)
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
                             Text("Balance", fontSize = 12.sp, color = Color.Gray)
-                            Text(asset.balance, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                            Text(asset.balance, fontWeight = FontWeight.Black, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Price", fontSize = 12.sp, color = Color.Gray)
-                            Text(String.format("$%.2f", asset.price), fontWeight = FontWeight.Bold)
+                            Text(String.format("$%.2f", asset.price), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                         }
                     }
                 }
@@ -93,7 +107,15 @@ fun TransferScreen(
                     placeholder = { Text("0x...") },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSending,
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedBorderColor = Color.Gray,
+                        cursorColor = MaterialTheme.colorScheme.onBackground,
+                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
+                    )
                 )
 
                 OutlinedTextField(
@@ -103,11 +125,19 @@ fun TransferScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSending,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedBorderColor = Color.Gray,
+                        cursorColor = MaterialTheme.colorScheme.onBackground,
+                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
+                    )
                 )
 
                 if (errorMsg != null) {
-                    Text(errorMsg!!, color = Color.Red, fontWeight = FontWeight.Bold)
+                    Text(errorMsg!!, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -119,8 +149,6 @@ fun TransferScreen(
                             isSending = true
                             errorMsg = null
                             viewModel.sendAsset(selectedAsset!!, recipientAddress, amount)
-                            // In a real app we'd wait for result, here we just go back after a delay or optimistic success
-                            // For simplicity, we assume it works or UI updates via flow
                              onBack()
                         } else {
                             errorMsg = "Please fill all fields"
@@ -139,39 +167,40 @@ fun AssetSelector(
     assets: List<AssetUiModel>,
     onSelected: (AssetUiModel) -> Unit
 ) {
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         items(assets) { asset ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, BrutalBlack)
+                    .border(1.dp, MaterialTheme.colorScheme.onBackground)
                     .clickable { onSelected(asset) }
-                    .padding(16.dp),
+                    .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(BrutalBlack),
+                            .size(32.dp)
+                            .background(MaterialTheme.colorScheme.onBackground),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             asset.symbol.take(1),
-                            color = BrutalWhite,
-                            fontWeight = FontWeight.Black
+                            color = MaterialTheme.colorScheme.background,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(asset.symbol, fontWeight = FontWeight.Bold)
-                        Text(asset.networkName, fontSize = 12.sp, color = Color.Gray)
+                        Text(asset.symbol, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+                        Text(asset.name, fontSize = 10.sp, color = Color.Gray, lineHeight = 12.sp)
                     }
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(asset.balance, fontWeight = FontWeight.Black)
-                    Text(asset.balanceUsd, fontSize = 12.sp, color = Color.Gray)
+                    Text(asset.balance, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+                    Text(asset.balanceUsd, fontSize = 10.sp, color = Color.Gray)
                 }
             }
         }

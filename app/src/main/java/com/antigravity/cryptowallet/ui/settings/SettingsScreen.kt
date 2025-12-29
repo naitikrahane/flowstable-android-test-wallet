@@ -26,12 +26,13 @@ import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 @Composable
 fun SettingsScreen(
     onSetupSecurity: () -> Unit,
-    onViewSeedPhrase: () -> Unit
+    onViewSeedPhrase: () -> Unit,
+    onViewAppInfo: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BrutalWhite)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         BrutalistHeader("Settings")
@@ -56,10 +57,10 @@ fun SettingsScreen(
             item {
                 SettingsSection("App")
                 SettingsItem(
-                    title = "About",
-                    subtitle = "Version 1.0 (Testnet)",
+                    title = "About & Appearance",
+                    subtitle = "Version, Theme, Info",
                     icon = Icons.Default.Info,
-                    onClick = { }
+                    onClick = onViewAppInfo
                 )
             }
         }
@@ -87,20 +88,20 @@ fun SettingsItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BrutalBlack)
+            .border(1.dp, MaterialTheme.colorScheme.onBackground)
             .clickable { onClick() }
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(imageVector = icon, contentDescription = null, tint = BrutalBlack)
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(text = title, fontWeight = FontWeight.Bold, color = BrutalBlack)
+                Text(text = title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Text(text = subtitle, fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray)
             }
         }
-        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = BrutalBlack)
+        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground)
     }
 }

@@ -30,7 +30,8 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         }
 
         setContent {
-            CryptoWalletTheme {
+            val settingsViewModel: com.antigravity.cryptowallet.ui.settings.SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            CryptoWalletTheme(themeType = settingsViewModel.currentTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = androidx.compose.material3.MaterialTheme.colorScheme.background

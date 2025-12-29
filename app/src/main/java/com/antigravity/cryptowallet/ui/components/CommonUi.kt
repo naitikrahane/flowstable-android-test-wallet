@@ -41,8 +41,8 @@ fun BrutalistButton(
     inverted: Boolean = false,
     enabled: Boolean = true
 ) {
-    val backgroundColor = if (inverted) BrutalWhite else BrutalBlack
-    val contentColor = if (inverted) BrutalBlack else BrutalWhite
+    val backgroundColor = if (inverted) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
+    val contentColor = if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background
     
     // Manual ripple or state effect for "Fast interactions"
     val interactionSource = remember { MutableInteractionSource() }
@@ -61,7 +61,7 @@ fun BrutalistButton(
             disabledContentColor = Color.LightGray
         ),
         shape = RectangleShape, // No rounded corners for brutalism
-        border = BorderStroke(2.dp, if (inverted) BrutalBlack else BrutalWhite),
+        border = BorderStroke(2.dp, if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background),
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
@@ -91,7 +91,7 @@ fun BrutalistTextField(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, BrutalBlack, RectangleShape)
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RectangleShape)
                 .padding(16.dp)
         ) {
             if (value.isEmpty()) {
@@ -105,14 +105,14 @@ fun BrutalistTextField(
                 value = value,
                 onValueChange = onValueChange,
                 textStyle = TextStyle(
-                    color = BrutalBlack,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 16.sp
                 ),
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
                 singleLine = singleLine,
-                cursorBrush = SolidColor(BrutalBlack),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -124,7 +124,7 @@ fun BrutalistHeader(text: String) {
     Text(
         text = text.uppercase(),
         style = MaterialTheme.typography.displayMedium,
-        color = BrutalBlack,
+        color = MaterialTheme.colorScheme.onBackground,
         modifier = Modifier.padding(vertical = 24.dp)
     )
 }
@@ -135,7 +135,7 @@ fun BrutalistInfoRow(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .border(1.dp, BrutalBlack, RectangleShape)
+            .border(1.dp, MaterialTheme.colorScheme.onBackground, RectangleShape)
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -143,12 +143,14 @@ fun BrutalistInfoRow(label: String, value: String) {
         Text(
             text = label.uppercase(),
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontFamily = FontFamily.Monospace
+            fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }
@@ -168,8 +170,8 @@ fun BrutalistBottomBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(2.dp, BrutalBlack)
-            .background(BrutalWhite)
+            .border(2.dp, MaterialTheme.colorScheme.onBackground)
+            .background(MaterialTheme.colorScheme.background)
             .height(64.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -179,7 +181,7 @@ fun BrutalistBottomBar(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .background(if (isSelected) BrutalBlack else BrutalWhite)
+                    .background(if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background)
                     .clickable { onItemClick(item.route) }
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
@@ -188,20 +190,20 @@ fun BrutalistBottomBar(
                     androidx.compose.material3.Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (isSelected) BrutalWhite else BrutalBlack,
+                        tint = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
                         text = item.title.uppercase(),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) BrutalWhite else BrutalBlack
+                        color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
             // Vertical Divider
             if (item != items.last()) {
-                Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(BrutalBlack))
+                Box(modifier = Modifier.width(2.dp).fillMaxHeight().background(MaterialTheme.colorScheme.onBackground))
             }
         }
     }

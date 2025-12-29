@@ -17,75 +17,51 @@ val White = Color(0xFFFFFFFF)
 val BrutalBlack = Black
 val BrutalWhite = White
 
-private val DarkColorScheme = darkColorScheme(
-    primary = White,
-    onPrimary = Black,
-    secondary = White,
-    onSecondary = Black,
-    tertiary = White,
-    onTertiary = Black,
-    background = Black,
-    onBackground = White,
-    surface = Black,
-    onSurface = White,
-    error = White,
-    onError = Black
+
+enum class ThemeType {
+    DEFAULT, MIDNIGHT, FOREST, CRIMSON, SLATE, VIOLET
+}
+
+private val DefaultScheme = lightColorScheme(
+    primary = Black, onPrimary = White, background = White, onBackground = Black, surface = White, onSurface = Black
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Black,
-    onPrimary = White,
-    secondary = Black,
-    onSecondary = White,
-    tertiary = Black,
-    onTertiary = White,
-    background = White,
-    onBackground = Black,
-    surface = White,
-    onSurface = Black,
-    error = Black,
-    onError = White
+private val MidnightScheme = lightColorScheme(
+    primary = Color(0xFF191970), onPrimary = White, background = White, onBackground = Color(0xFF191970), surface = White, onSurface = Color(0xFF191970)
 )
 
-val BrutalistTypography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Bold,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-0.25).sp
-    ),
-    displayMedium = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Bold,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = 0.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
-    )
+private val ForestScheme = lightColorScheme(
+    primary = Color(0xFF006400), onPrimary = White, background = White, onBackground = Color(0xFF006400), surface = White, onSurface = Color(0xFF006400)
 )
+
+private val CrimsonScheme = lightColorScheme(
+    primary = Color(0xFF8B0000), onPrimary = White, background = White, onBackground = Color(0xFF8B0000), surface = White, onSurface = Color(0xFF8B0000)
+)
+
+private val SlateScheme = lightColorScheme(
+    primary = Color(0xFF2F4F4F), onPrimary = White, background = White, onBackground = Color(0xFF2F4F4F), surface = White, onSurface = Color(0xFF2F4F4F)
+)
+
+private val VioletScheme = lightColorScheme(
+    primary = Color(0xFF4B0082), onPrimary = White, background = White, onBackground = Color(0xFF4B0082), surface = White, onSurface = Color(0xFF4B0082)
+)
+
+// Dynamic provider for "Brutal" colors based on MaterialTheme (to be used in Composable context)
+// Note: We can't change the global 'val BrutalBlack' easily, but we can recommend using MaterialTheme.colorScheme.primary
 
 @Composable
 fun CryptoWalletTheme(
-    darkTheme: Boolean = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q && 
-                         (android.content.res.Resources.getSystem().configuration.uiMode and 
-                          android.content.res.Configuration.UI_MODE_NIGHT_MASK == android.content.res.Configuration.UI_MODE_NIGHT_YES),
+    themeType: ThemeType = ThemeType.DEFAULT,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = when (themeType) {
+        ThemeType.DEFAULT -> DefaultScheme
+        ThemeType.MIDNIGHT -> MidnightScheme
+        ThemeType.FOREST -> ForestScheme
+        ThemeType.CRIMSON -> CrimsonScheme
+        ThemeType.SLATE -> SlateScheme
+        ThemeType.VIOLET -> VioletScheme
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
