@@ -11,6 +11,7 @@ data class TokenEntity(
     val contractAddress: String?, // Null for native (ETH)
     val decimals: Int,
     val chainId: String, // eth, matic, etc.
+    val coingeckoId: String? = null,
     val logoUrl: String? = null,
     val isCustom: Boolean = false
 )
