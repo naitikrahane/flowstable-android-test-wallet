@@ -7,10 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -101,7 +102,8 @@ fun TransferScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(2.dp, MaterialTheme.colorScheme.onBackground)
+                            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -160,6 +162,7 @@ fun TransferScreen(
 
                 BrutalistButton(
                     text = if (isSending) "Processing..." else "Send Now",
+                    icon = if (isSending) null else Icons.Default.Send,
                     onClick = {
                         if (recipientAddress.isNotBlank() && amount.isNotBlank() && selectedAsset != null) {
                             val evmRegex = Regex("^0x[a-fA-F0-9]{40}$")
@@ -210,7 +213,8 @@ fun AssetSelector(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.onBackground)
+                    .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable { onSelected(asset) }
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -220,7 +224,8 @@ fun AssetSelector(
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .background(MaterialTheme.colorScheme.onBackground),
+                            .background(MaterialTheme.colorScheme.onBackground, CircleShape)
+                            .clip(CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

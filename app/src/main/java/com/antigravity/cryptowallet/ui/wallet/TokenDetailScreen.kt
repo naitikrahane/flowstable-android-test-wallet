@@ -3,11 +3,14 @@ package com.antigravity.cryptowallet.ui.wallet
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +25,8 @@ import androidx.compose.ui.unit.sp
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import com.antigravity.cryptowallet.ui.wallet.TokenDetailViewModel
 
 @Composable
@@ -91,7 +96,8 @@ fun TokenDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .border(2.dp, MaterialTheme.colorScheme.onBackground)
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(16.dp)) // Added clip for consistency
                 .padding(16.dp)
         ) {
             if (points.isNotEmpty()) {
@@ -134,7 +140,8 @@ fun TokenDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, MaterialTheme.colorScheme.onBackground)
+                    .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)) // Changed border width to 1.dp
+                    .clip(RoundedCornerShape(12.dp))
                     .padding(12.dp)
             ) {
                 Text(
@@ -175,11 +182,13 @@ fun TokenDetailScreen(
             com.antigravity.cryptowallet.ui.components.BrutalistButton(
                 text = "Send",
                 onClick = onNavigateToSend,
+                icon = Icons.Default.ArrowOutward, // Added icon
                 modifier = Modifier.weight(1f)
             )
             com.antigravity.cryptowallet.ui.components.BrutalistButton(
                 text = "Receive",
                 onClick = { /* Show Receive Dialog */ },
+                icon = Icons.Default.FileDownload, // Added icon
                 modifier = Modifier.weight(1f),
                 inverted = true
             )
@@ -198,7 +207,8 @@ fun TokenDetailScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.onBackground)
+                        .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)) // Changed border width to 1.dp
+                        .clip(RoundedCornerShape(12.dp))
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
