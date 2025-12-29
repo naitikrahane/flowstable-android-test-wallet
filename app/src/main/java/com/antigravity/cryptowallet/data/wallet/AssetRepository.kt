@@ -41,7 +41,7 @@ class AssetRepository @Inject constructor(
 
         // 2. Prepare list of CoinGecko IDs to fetch prices
         val networkIds = networkRepository.networks.map { it.coingeckoId }
-        val tokenIds = "tether" // Simplified: In real app, we store coingeckoId in TokenEntity. Assuming USDT is tether.
+        val tokenIds = allTokens.mapNotNull { it.coingeckoId }
         
         val prices = try {
             coinGeckoApi.getSimplePrice(
@@ -87,10 +87,8 @@ class AssetRepository @Inject constructor(
             if (token.contractAddress != null) {
                 val balance = blockchainService.getTokenBalance(net.rpcUrl, token.contractAddress, address)
                 val tokenBalance = BigDecimal(balance).divide(BigDecimal.TEN.pow(token.decimals))
-                // Hardcoded ID for USDT for now as "tether"
-                val priceId = if (token.symbol == "USDT") "tether" else "unknown" 
-                val price = prices[priceId]?.get("usd") ?: 0.0
-                 val balanceUsd = tokenBalance.multiply(BigDecimal(price))
+                val price = token.coingeckoId?.let { prices[it]?.get("usd") } ?: 0.0
+                val balanceUsd = tokenBalance.multiply(BigDecimal(price))
 
                 resultList.add(
                     AssetUiModel(
