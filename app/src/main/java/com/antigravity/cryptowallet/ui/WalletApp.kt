@@ -39,7 +39,14 @@ fun WalletApp(startDestination: String = "intro") {
         composable("home") {
             MainScreen(
                 onNavigateToSecuritySetup = { navController.navigate("security_setup") },
-                onNavigateToRevealSeed = { navController.navigate("reveal_seed_verify") }
+                onNavigateToRevealSeed = { navController.navigate("reveal_seed_verify") },
+                onNavigateToTransfer = { navController.navigate("transfer") }
+            )
+        }
+
+        composable("transfer") {
+            com.antigravity.cryptowallet.ui.wallet.TransferScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         

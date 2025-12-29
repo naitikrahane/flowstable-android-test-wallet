@@ -55,9 +55,8 @@ class AssetRepository @Inject constructor(
 
         val resultList = mutableListOf<AssetUiModel>()
 
-        // 3. Fetch Native Balances (ETH, BNB, MATIC)
-        // For simplicity, we only show ETH, BNB, MATIC native defaults.
-        val mainNetworks = listOf("eth", "bsc", "matic")
+        // 3. Fetch Native Balances (ETH, BNB, MATIC, BASE)
+        val mainNetworks = listOf("eth", "bsc", "matic", "base")
         
         for (netId in mainNetworks) {
             val net = networkRepository.getNetwork(netId)

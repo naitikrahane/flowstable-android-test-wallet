@@ -8,7 +8,7 @@ import org.json.JSONObject
 class Web3Bridge(
     private val webView: WebView,
     private val address: String,
-    private val chainId: Int = 1,
+    private val chainId: Long = 1,
     private val onActionRequest: (Web3Request) -> Unit
 ) {
     private val gson = Gson()

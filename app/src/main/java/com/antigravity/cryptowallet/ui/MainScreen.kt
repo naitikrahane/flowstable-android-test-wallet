@@ -28,7 +28,8 @@ import com.antigravity.cryptowallet.ui.history.HistoryScreen
 @Composable
 fun MainScreen(
     onNavigateToSecuritySetup: () -> Unit,
-    onNavigateToRevealSeed: () -> Unit
+    onNavigateToRevealSeed: () -> Unit,
+    onNavigateToTransfer: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -64,7 +65,10 @@ fun MainScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("wallet") {
-                WalletScreen(onSetupSecurity = onNavigateToSecuritySetup)
+                WalletScreen(
+                    onSetupSecurity = onNavigateToSecuritySetup,
+                    onNavigateToSend = onNavigateToTransfer
+                )
             }
             composable("browser") {
                 com.antigravity.cryptowallet.ui.browser.BrowserScreen()

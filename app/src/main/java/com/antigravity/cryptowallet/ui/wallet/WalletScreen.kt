@@ -17,6 +17,21 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import com.antigravity.cryptowallet.utils.QrCodeGenerator
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -53,11 +68,16 @@ import androidx.compose.material.icons.filled.Settings
 @HiltViewModel
 class WalletViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
-    private val assetRepository: AssetRepository
+    private val assetRepository: AssetRepository,
+    private val networkRepository: NetworkRepository
 ) : ViewModel() {
     val address: String
         get() = walletRepository.getAddress()
     
+    val networks = networkRepository.networks
+    var activeNetwork by mutableStateOf(networkRepository.activeNetwork)
+        private set
+
     // UI State
     var totalBalanceUsd by mutableStateOf("$0.00")
     var assets by mutableStateOf<List<com.antigravity.cryptowallet.data.models.AssetUiModel>>(emptyList())
@@ -69,11 +89,16 @@ class WalletViewModel @Inject constructor(
     init {
         loadData()
     }
+
+    fun switchNetwork(networkId: String) {
+        networkRepository.setActiveNetwork(networkId)
+        activeNetwork = networkRepository.activeNetwork
+        refresh()
+    }
     
     fun addToken(address: String, symbol: String, decimals: Int) {
         viewModelScope.launch {
-            // Default to ETH chain for now for custom tokens
-            assetRepository.addToken(address, symbol, decimals, "eth", symbol)
+            assetRepository.addToken(address, symbol, decimals, activeNetwork.id, symbol)
         }
     }
 
@@ -117,7 +142,8 @@ class WalletViewModel @Inject constructor(
 @Composable
 fun WalletScreen(
     viewModel: WalletViewModel = hiltViewModel(),
-    onSetupSecurity: () -> Unit = {}
+    onSetupSecurity: () -> Unit = {},
+    onNavigateToSend: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -128,77 +154,39 @@ fun WalletScreen(
         val clipboardManager = LocalClipboardManager.current
         var showReceiveDialog by remember { mutableStateOf(false) }
         var showAddTokenDialog by remember { mutableStateOf(false) }
-        var showSendDialog by remember { mutableStateOf(false) }
+        var showNetworkSelector by remember { mutableStateOf(false) }
 
-        if (showSendDialog) {
-            var inputAddress by remember { mutableStateOf("") }
-            var inputAmount by remember { mutableStateOf("") }
-            var selectedAsset by remember { mutableStateOf(viewModel.assets.firstOrNull()) }
-            var isSending by remember { mutableStateOf(false) }
-
-            Dialog(onDismissRequest = { if(!isSending) showSendDialog = false }) {
+        if (showNetworkSelector) {
+            Dialog(onDismissRequest = { showNetworkSelector = false }) {
                 Column(
                     modifier = Modifier
                         .background(BrutalWhite)
                         .border(2.dp, BrutalBlack)
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(24.dp)
                 ) {
-                    BrutalistHeader("Send Assets")
+                    BrutalistHeader("Switch Network")
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    if (viewModel.assets.isEmpty()) {
-                        Text("No assets to send", color = BrutalBlack)
-                    } else {
-                        // Simple dropdown placeholder or button to loop
-                        Column(modifier = Modifier.fillMaxWidth().heightIn(max = 120.dp).verticalScroll(rememberScrollState())) {
-                            viewModel.assets.forEach { asset ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { selectedAsset = asset }
-                                        .background(if (selectedAsset?.id == asset.id) BrutalBlack else BrutalWhite)
-                                        .padding(8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(asset.symbol, color = if (selectedAsset?.id == asset.id) BrutalWhite else BrutalBlack)
-                                    Text(asset.balance, color = if (selectedAsset?.id == asset.id) BrutalWhite else BrutalBlack)
+                    LazyColumn {
+                        items(viewModel.networks.size) { index ->
+                            val net = viewModel.networks[index]
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { 
+                                        viewModel.switchNetwork(net.id)
+                                        showNetworkSelector = false
+                                    }
+                                    .background(if (viewModel.activeNetwork.id == net.id) BrutalBlack else BrutalWhite)
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(net.name, color = if (viewModel.activeNetwork.id == net.id) BrutalWhite else BrutalBlack, fontWeight = FontWeight.Bold)
+                                if (viewModel.activeNetwork.id == net.id) {
+                                    Text("ACTIVE", color = BrutalWhite, fontSize = 10.sp, fontWeight = FontWeight.Black)
                                 }
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        androidx.compose.material3.OutlinedTextField(
-                            value = inputAddress,
-                            onValueChange = { inputAddress = it },
-                            label = { Text("To Address") },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !isSending
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        androidx.compose.material3.OutlinedTextField(
-                            value = inputAmount,
-                            onValueChange = { inputAmount = it },
-                            label = { Text("Amount") },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !isSending,
-                            keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal)
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        BrutalistButton(
-                            text = if(isSending) "Sending..." else "Send", 
-                            onClick = { 
-                                if (inputAddress.isNotEmpty() && inputAmount.isNotEmpty() && selectedAsset != null) {
-                                    isSending = true
-                                    viewModel.sendAsset(selectedAsset!!, inputAddress, inputAmount)
-                                    // Close after a bit or on success. For now simple:
-                                    showSendDialog = false
-                                }
-                            },
-                            enabled = !isSending
-                        )
                     }
                 }
             }
@@ -219,6 +207,8 @@ fun WalletScreen(
                 ) {
                     BrutalistHeader("Add Token")
                     Spacer(modifier = Modifier.height(16.dp))
+                    Text("on ${viewModel.activeNetwork.name}", fontSize = 12.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     androidx.compose.material3.OutlinedTextField(
                         value = inputAddress,
@@ -233,14 +223,6 @@ fun WalletScreen(
                         label = { Text("Symbol (e.g. USDC)") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    androidx.compose.material3.OutlinedTextField(
-                        value = inputDecimals,
-                        onValueChange = { inputDecimals = it },
-                        label = { Text("Decimals") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
                     Spacer(modifier = Modifier.height(24.dp))
 
                     BrutalistButton(text = "Add", onClick = { 
@@ -263,6 +245,8 @@ fun WalletScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BrutalistHeader("Receive Assets")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("to ${viewModel.activeNetwork.name}", fontSize = 12.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(16.dp))
 
                     if (viewModel.address.length > 10) { 
@@ -305,7 +289,24 @@ fun WalletScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BrutalistHeader("Dashboard")
+            Column {
+                BrutalistHeader("Dashboard")
+                Row(
+                    modifier = Modifier
+                        .clickable { showNetworkSelector = true }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.size(8.dp).background(Color.Green))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        viewModel.activeNetwork.name.uppercase(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Black,
+                        color = BrutalBlack
+                    )
+                }
+            }
             Row {
                 androidx.compose.material3.IconButton(
                     onClick = { viewModel.refresh() }
@@ -330,7 +331,7 @@ fun WalletScreen(
             }
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         
         Text(
             text = "TOTAL BALANCE",
@@ -435,7 +436,7 @@ fun WalletScreen(
         ) {
             BrutalistButton(
                 text = "Send",
-                onClick = { showSendDialog = true },
+                onClick = onNavigateToSend,
                 modifier = Modifier.weight(1f)
             )
             BrutalistButton(

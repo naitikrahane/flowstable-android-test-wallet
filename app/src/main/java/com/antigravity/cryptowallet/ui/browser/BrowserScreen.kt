@@ -45,16 +45,77 @@ fun BrowserScreen(
     var webView: WebView? by remember { mutableStateOf(null) }
     
     val address = walletRepository.getAddress()
+    var activeNetwork by remember { mutableStateOf(viewModel.activeNetwork) }
     
     // Web3 Confirmation State
     var pendingRequest by remember { mutableStateOf<Web3Bridge.Web3Request?>(null) }
     var bridgeInstance by remember { mutableStateOf<Web3Bridge?>(null) }
+    var showNetworkSelector by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BrutalWhite)
     ) {
+        if (showNetworkSelector) {
+            androidx.compose.ui.window.Dialog(onDismissRequest = { showNetworkSelector = false }) {
+                Column(
+                    modifier = Modifier
+                        .background(BrutalWhite)
+                        .border(2.dp, BrutalBlack)
+                        .padding(24.dp)
+                ) {
+                    BrutalistHeader("Select Network")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LazyColumn {
+                        items(viewModel.networks) { net ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { 
+                                        viewModel.switchNetwork(net.id)
+                                        activeNetwork = viewModel.activeNetwork
+                                        showNetworkSelector = false
+                                        // RELOAD page to apply new network
+                                        webView?.reload()
+                                    }
+                                    .background(if (activeNetwork.id == net.id) BrutalBlack else BrutalWhite)
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(net.name, color = if (activeNetwork.id == net.id) BrutalWhite else BrutalBlack, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Top Bar with Network Selector
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(2.dp, BrutalBlack)
+                .background(BrutalBlack)
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("BROWSER", color = BrutalWhite, fontWeight = FontWeight.Black)
+            Row(
+                modifier = Modifier
+                    .border(1.dp, BrutalWhite)
+                    .clickable { showNetworkSelector = true }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.size(6.dp).background(androidx.compose.ui.graphics.Color.Green))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(activeNetwork.name.uppercase(), color = BrutalWhite, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
         // Validation / Search Bar
         Row(
             modifier = Modifier
@@ -99,12 +160,11 @@ fun BrowserScreen(
                         settings.loadWithOverviewMode = true
                         settings.useWideViewPort = true
                         
-                        // Support Mixed Content (HTTP on HTTPS) - sometimes needed
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                             settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                         }
                         
-                        val bridge = Web3Bridge(this, address) { request ->
+                        val bridge = Web3Bridge(this, address, activeNetwork.chainId) { request ->
                             pendingRequest = request
                         }
                         bridgeInstance = bridge
@@ -113,18 +173,22 @@ fun BrowserScreen(
                         webViewClient = object : WebViewClient() {
                             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                 super.onPageStarted(view, url, favicon)
-                                view?.evaluateJavascript(bridge.getInjectionJs(), null)
+                                // We re-create the bridge in fact because chainId might change
+                                val currentBridge = Web3Bridge(view!!, address, activeNetwork.chainId) { request ->
+                                    pendingRequest = request
+                                }
+                                bridgeInstance = currentBridge
+                                view.evaluateJavascript(currentBridge.getInjectionJs(), null)
                             }
                             
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 super.onPageFinished(view, url)
                                 if (url != null) inputUrl = url
-                                view?.evaluateJavascript(bridge.getInjectionJs(), null)
+                                bridgeInstance?.let { view?.evaluateJavascript(it.getInjectionJs(), null) }
                             }
                         }
                         
                         webChromeClient = android.webkit.WebChromeClient()
-                        
                         loadUrl(url)
                         webView = this
                     }
