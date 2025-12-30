@@ -152,7 +152,7 @@ fun BrowserScreen(
                         webView = wv 
                     },
                     address = address,
-                    chainId = activeNetwork.chainId,
+                    chainIdProvider = { activeNetwork.chainId },
                     onPendingRequest = { req, bridge ->
                         pendingRequest = req
                         bridgeInstance = bridge
@@ -411,7 +411,7 @@ fun BrowserWebView(
     onUpdateUrl: (String) -> Unit,
     onWebViewCreated: (WebView) -> Unit,
     address: String,
-    chainId: Long,
+    chainIdProvider: () -> Long,
     onPendingRequest: (Web3Bridge.Web3Request, Web3Bridge) -> Unit
 ) {
     AndroidView(
@@ -427,7 +427,7 @@ fun BrowserWebView(
                     settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                 }
                 
-                val bridge = Web3Bridge(this, address, { chainId }) { request ->
+                val bridge = Web3Bridge(this, address, chainIdProvider) { request ->
                     val bridgeRef = this.tag as? Web3Bridge ?: return@Web3Bridge
                     onPendingRequest(request, bridgeRef)
                 }
