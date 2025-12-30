@@ -45,10 +45,16 @@ class CreateWalletViewModel @Inject constructor(
     var enteredWords = mutableStateOf(mapOf<Int, String>())
     var verificationError by mutableStateOf<String?>(null)
 
+    var isLoading by mutableStateOf(false)
+
     fun generateWallet() {
         if (mnemonic.isEmpty()) {
-            val phrase = walletRepository.createWallet()
-            mnemonic = phrase.split(" ")
+            viewModelScope.launch {
+                isLoading = true
+                val phrase = walletRepository.createWallet()
+                mnemonic = phrase.split(" ")
+                isLoading = false
+            }
         }
     }
 
@@ -98,7 +104,11 @@ fun CreateWalletScreen(
             .clip(RoundedCornerShape(12.dp))
             .padding(12.dp),
     ) {
-        if (viewModel.step == CreateWalletStep.ShowPhrase) {
+        if (viewModel.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator(color = BrutalBlack)
+            }
+        } else if (viewModel.step == CreateWalletStep.ShowPhrase) {
             BrutalistHeader("Secret Phrase")
 
             Text(

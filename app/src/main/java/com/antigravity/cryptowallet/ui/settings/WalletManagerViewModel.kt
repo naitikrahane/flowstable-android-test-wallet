@@ -3,6 +3,7 @@ package com.antigravity.cryptowallet.ui.settings
 import androidx.lifecycle.ViewModel
 import com.antigravity.cryptowallet.data.wallet.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -18,11 +19,15 @@ class WalletManagerViewModel @Inject constructor(
     }
 
     fun switchWallet(walletId: String) {
-        walletRepository.switchWallet(walletId)
+        androidx.lifecycle.viewModelScope.launch {
+            walletRepository.switchWallet(walletId)
+        }
     }
 
     fun deleteWallet(walletId: String) {
-        walletRepository.deleteWallet(walletId)
+        androidx.lifecycle.viewModelScope.launch {
+            walletRepository.deleteWallet(walletId)
+        }
     }
 
     fun renameWallet(walletId: String, newName: String) {

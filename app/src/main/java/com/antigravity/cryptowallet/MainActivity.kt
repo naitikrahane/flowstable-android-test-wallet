@@ -15,6 +15,10 @@ import com.antigravity.cryptowallet.ui.theme.ThemeType
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+import androidx.lifecycle.lifecycleScope
+import com.antigravity.cryptowallet.data.wallet.WalletRepository
+import kotlinx.coroutines.launch
+
 @AndroidEntryPoint
 class MainActivity : androidx.fragment.app.FragmentActivity() {
 
@@ -22,10 +26,18 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
     lateinit var secureStorage: com.antigravity.cryptowallet.data.security.SecureStorage
     
     @Inject
+    lateinit var walletRepository: WalletRepository
+    
+    @Inject
     lateinit var themeRepository: ThemeRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize wallet asynchronously
+        lifecycleScope.launch {
+            walletRepository.loadWallet()
+        }
         
         val startDestination = if (secureStorage.hasWallet()) {
             if (secureStorage.hasPin()) "unlock" else "security_setup"

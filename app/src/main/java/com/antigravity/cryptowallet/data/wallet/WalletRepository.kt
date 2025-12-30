@@ -18,7 +18,7 @@ class WalletRepository @Inject constructor(
     private val secureStorage: SecureStorage
 ) {
     init {
-        loadWallet()
+        // Initialization is now handled asynchronously via loadWallet()
     }
 
     // In-memory cache of credentials (cleared on lock)
@@ -36,7 +36,7 @@ class WalletRepository @Inject constructor(
         _activeWallet.value = secureStorage.getActiveWallet()
     }
 
-    fun createWallet(name: String = "Wallet"): String {
+    suspend fun createWallet(name: String = "Wallet"): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val initialEntropy = ByteArray(16)
         SecureRandom().nextBytes(initialEntropy)
         val mnemonic = MnemonicUtils.generateMnemonic(initialEntropy)
@@ -63,7 +63,7 @@ class WalletRepository @Inject constructor(
         activeCredentials = credentials
         refreshWallets()
         
-        return mnemonic
+        mnemonic
     }
 
     suspend fun importWallet(mnemonic: String, name: String = "Imported Wallet"): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -115,15 +115,14 @@ class WalletRepository @Inject constructor(
         }
     }
 
-    fun switchWallet(walletId: String) {
+    suspend fun switchWallet(walletId: String) {
         secureStorage.setActiveWallet(walletId)
         val wallet = secureStorage.getWallets().find { it.id == walletId } ?: return
-        
         loadWalletCredentials(wallet)
         refreshWallets()
     }
 
-    fun deleteWallet(walletId: String) {
+    suspend fun deleteWallet(walletId: String) {
         secureStorage.deleteWallet(walletId)
         refreshWallets()
         
@@ -141,7 +140,7 @@ class WalletRepository @Inject constructor(
         refreshWallets()
     }
 
-    private fun loadWalletCredentials(wallet: WalletInfo) {
+    private suspend fun loadWalletCredentials(wallet: WalletInfo) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         activeCredentials = when (wallet.type) {
             WalletType.MNEMONIC -> {
                 val mnemonic = secureStorage.getMnemonicForWallet(wallet.id)
@@ -160,34 +159,39 @@ class WalletRepository @Inject constructor(
         }
     }
 
-    fun loadWallet(mnemonic: String? = null, privateKey: String? = null) {
-        // Check for multi-wallet first
-        val activeWallet = secureStorage.getActiveWallet()
-        if (activeWallet != null) {
-            loadWalletCredentials(activeWallet)
-            refreshWallets()
-            return
-        }
-        
-        // Legacy single wallet support
-        val seedMnemonic = mnemonic ?: secureStorage.getMnemonic()
-        val storedPrivateKey = privateKey ?: secureStorage.getPrivateKey()
+    suspend fun loadWallet(mnemonic: String? = null, privateKey: String? = null) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            // Check for multi-wallet first
+            val activeWallet = secureStorage.getActiveWallet()
+            if (activeWallet != null) {
+                loadWalletCredentials(activeWallet)
+                refreshWallets()
+                return@withContext
+            }
+            
+            // Legacy single wallet support
+            val seedMnemonic = mnemonic ?: secureStorage.getMnemonic()
+            val storedPrivateKey = privateKey ?: secureStorage.getPrivateKey()
 
-        activeCredentials = when {
-            seedMnemonic != null -> {
-                val seed = MnemonicUtils.generateSeed(seedMnemonic, null)
-                val masterKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
-                val path = intArrayOf(44 or Bip32ECKeyPair.HARDENED_BIT, 60 or Bip32ECKeyPair.HARDENED_BIT, 0 or Bip32ECKeyPair.HARDENED_BIT, 0, 0)
-                val derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeyPair, path)
-                Credentials.create(derivedKeyPair)
+            activeCredentials = when {
+                seedMnemonic != null -> {
+                    val seed = MnemonicUtils.generateSeed(seedMnemonic, null)
+                    val masterKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
+                    val path = intArrayOf(44 or Bip32ECKeyPair.HARDENED_BIT, 60 or Bip32ECKeyPair.HARDENED_BIT, 0 or Bip32ECKeyPair.HARDENED_BIT, 0, 0)
+                    val derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeyPair, path)
+                    Credentials.create(derivedKeyPair)
+                }
+                storedPrivateKey != null -> {
+                    Credentials.create(storedPrivateKey)
+                }
+                else -> null
             }
-            storedPrivateKey != null -> {
-                Credentials.create(storedPrivateKey)
-            }
-            else -> null
+            
+            refreshWallets()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            activeCredentials = null
         }
-        
-        refreshWallets()
     }
 
     fun hasMnemonic(): Boolean {
