@@ -6,6 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.lifecycle.viewModelScope
+
 @HiltViewModel
 class WalletManagerViewModel @Inject constructor(
     private val walletRepository: WalletRepository
@@ -19,13 +21,13 @@ class WalletManagerViewModel @Inject constructor(
     }
 
     fun switchWallet(walletId: String) {
-        androidx.lifecycle.viewModelScope.launch {
+        viewModelScope.launch {
             walletRepository.switchWallet(walletId)
         }
     }
 
     fun deleteWallet(walletId: String) {
-        androidx.lifecycle.viewModelScope.launch {
+        viewModelScope.launch {
             walletRepository.deleteWallet(walletId)
         }
     }
