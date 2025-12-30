@@ -71,15 +71,12 @@ fun HistoryScreen(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "📭", 
-                        fontSize = 48.sp
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
                         "No transactions yet", 
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Your transaction history will appear here",
                         color = Color.Gray,

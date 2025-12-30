@@ -90,7 +90,7 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
             modifier = Modifier
                 .matchParentSize()
                 .offset(4.dp, 4.dp)
-                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
         )
         
         Row(
@@ -98,45 +98,45 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
                 .fillMaxWidth()
                 .background(
                     if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    RoundedCornerShape(16.dp)
+                    RoundedCornerShape(12.dp)
                 )
-                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp))
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .clickable { onSelect() }
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Theme preview box
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(previewColors.background)
-                    .border(2.dp, previewColors.text.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    .border(1.dp, previewColors.text.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(6.dp),
+                    modifier = Modifier.fillMaxSize().padding(4.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     // Mini header
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(8.dp)
+                            .height(6.dp)
                             .background(previewColors.primary, RoundedCornerShape(2.dp))
                     )
                     // Mini content
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(16.dp)
+                                .height(12.dp)
                                 .background(previewColors.surface, RoundedCornerShape(2.dp))
                         )
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(16.dp)
+                                .height(12.dp)
                                 .background(previewColors.surface, RoundedCornerShape(2.dp))
                         )
                     }
@@ -144,24 +144,24 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(10.dp)
+                            .height(8.dp)
                             .background(previewColors.primary, RoundedCornerShape(2.dp))
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = getThemeDisplayName(theme),
                     fontWeight = FontWeight.Black,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = getThemeDescription(theme).uppercase(),
-                    fontSize = 10.sp,
+                    fontSize = 9.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.sp
@@ -171,7 +171,7 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(24.dp)
                         .background(MaterialTheme.colorScheme.onBackground, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -179,7 +179,7 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
                         Icons.Default.Check, 
                         contentDescription = "Selected", 
                         tint = MaterialTheme.colorScheme.background,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
