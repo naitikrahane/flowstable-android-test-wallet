@@ -31,9 +31,10 @@ import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
 @Composable
+@Composable
 fun TransferScreen(
     onBack: () -> Unit,
-    onTransactionSuccess: (String, String, String) -> Unit,
+    onTransactionSuccess: (String, String, String, String) -> Unit,
     initialSymbol: String? = null,
     viewModel: WalletViewModel = hiltViewModel()
 ) {
@@ -49,8 +50,7 @@ fun TransferScreen(
     // Ensure assets are loaded
     LaunchedEffect(Unit) {
         if (viewModel.assets.isEmpty()) {
-            // Trigger refresh if needed, though init block usually handles it.
-            // We can assume the ViewModel is fetching.
+            // Trigger refresh if needed
         }
     }
     
@@ -82,7 +82,7 @@ fun TransferScreen(
         if (step == 0) {
             if (viewModel.assets.isEmpty()) {
                  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                     Text("Loading Assets...", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                     Text("Loading Assets...", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = MaterialTheme.colorScheme.onBackground)
                  }
             } else {
                 AssetSelector(
@@ -186,11 +186,16 @@ fun TransferScreen(
                             scope.launch {
                                 isSending = true
                                 errorMsg = null
-                                viewModel.sendAsset(selectedAsset!!, recipientAddress, amount)
-                                // Simulate network delay for "processing" feel
-                                delay(1500)
+                                // Call suspend function directly
+                                val txHash = viewModel.sendAsset(selectedAsset!!, recipientAddress, amount)
+                                
                                 isSending = false
-                                onTransactionSuccess(amount, selectedAsset!!.symbol, recipientAddress)
+                                
+                                if (txHash != null) {
+                                    onTransactionSuccess(amount, selectedAsset!!.symbol, recipientAddress, txHash)
+                                } else {
+                                    errorMsg = "Transaction Failed. Please check network/rpc."
+                                }
                             }
                         } else {
                             errorMsg = "Please fill all fields"
@@ -203,6 +208,7 @@ fun TransferScreen(
         }
     }
 }
+
 
 @Composable
 fun AssetSelector(

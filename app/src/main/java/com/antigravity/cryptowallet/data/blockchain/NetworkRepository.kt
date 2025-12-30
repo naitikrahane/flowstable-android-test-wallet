@@ -23,7 +23,7 @@ class NetworkRepository @Inject constructor() {
         Network("eth", "Ethereum", "https://rpc.ankr.com/eth", "https://rpc.ankr.com/eth", 1, "ETH", "ethereum", "https://api.etherscan.io/api"),
         Network("bsc", "BNB Chain", "https://bsc-dataseed.binance.org", "https://bsc-dataseed.binance.org", 56, "BNB", "binancecoin", "https://api.bscscan.com/api"),
         Network("matic", "Polygon", "https://polygon-rpc.com", "https://polygon-rpc.com", 137, "POL", "matic-network", "https://api.polygonscan.com/api"),
-        Network("base", "Base", "https://mainnet.base.org", "https://mainnet.base.org", 8453, "ETH", "ethereum", "https://api.basescan.org/api"),
+        Network("base", "Base", "https://rpc.ankr.com/base", "https://rpc.ankr.com/base", 8453, "ETH", "ethereum", "https://api.basescan.org/api"),
         Network("arb", "Arbitrum One", "https://arb1.arbitrum.io/rpc", "https://arb1.arbitrum.io/rpc", 42161, "ETH", "ethereum", "https://api.arbiscan.io/api"),
         Network("op", "Optimism", "https://mainnet.optimism.io", "https://mainnet.optimism.io", 10, "ETH", "ethereum", "https://api-optimistic.etherscan.io/api")
     )

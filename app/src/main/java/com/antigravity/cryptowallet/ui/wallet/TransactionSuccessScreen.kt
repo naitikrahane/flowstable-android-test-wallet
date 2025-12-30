@@ -27,6 +27,7 @@ fun TransactionSuccessScreen(
     amount: String,
     symbol: String,
     recipient: String,
+    txHash: String,
     onDone: () -> Unit
 ) {
     // Animation States
@@ -147,7 +148,7 @@ fun TransactionSuccessScreen(
                 
                 Text(
                     text = "$amount $symbol",
-                    fontSize = 48.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Black,
                     color = contentColor,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
@@ -157,8 +158,17 @@ fun TransactionSuccessScreen(
                 
                 Text(
                     text = "to ${recipient.take(6)}...${recipient.takeLast(4)}",
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     color = contentColor.copy(alpha = 0.8f),
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Ref: ${txHash.take(10)}...",
+                    fontSize = 12.sp,
+                    color = contentColor.copy(alpha = 0.6f),
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                 )
              }

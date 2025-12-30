@@ -108,6 +108,12 @@ fun TransactionItem(tx: TransactionEntity) {
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
+                Text(
+                    text = tx.hash.take(8) + "...",
+                    fontSize = 10.sp,
+                    color = Color.Gray,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                )
             }
         }
 

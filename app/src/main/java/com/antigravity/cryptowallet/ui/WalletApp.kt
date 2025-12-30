@@ -147,28 +147,35 @@ fun WalletApp(startDestination: String = "intro") {
             val symbol = backStackEntry.arguments?.getString("symbol")
             com.antigravity.cryptowallet.ui.wallet.TransferScreen(
                 onBack = { navController.popBackStack() },
-                onTransactionSuccess = { amount, sym, recipient ->
-                    navController.navigate("transaction_success/$amount/$sym/$recipient")
+                onTransactionSuccess = { amount, sym, recipient, txHash ->
+                    navController.navigate("transaction_success/$amount/$sym/$recipient?txHash=$txHash")
                 },
                 initialSymbol = symbol
             )
         }
 
         composable(
-            route = "transaction_success/{amount}/{symbol}/{recipient}",
+            route = "transaction_success/{amount}/{symbol}/{recipient}?txHash={txHash}",
             arguments = listOf(
                 androidx.navigation.navArgument("amount") { type = androidx.navigation.NavType.StringType },
                 androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType },
-                androidx.navigation.navArgument("recipient") { type = androidx.navigation.NavType.StringType }
+                androidx.navigation.navArgument("recipient") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("txHash") { 
+                    type = androidx.navigation.NavType.StringType 
+                    defaultValue = "Unknown"
+                }
             )
         ) { backStackEntry ->
             val amount = backStackEntry.arguments?.getString("amount") ?: ""
             val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
             val recipient = backStackEntry.arguments?.getString("recipient") ?: ""
+            val txHash = backStackEntry.arguments?.getString("txHash") ?: "Unknown"
+
             com.antigravity.cryptowallet.ui.wallet.TransactionSuccessScreen(
                 amount = amount,
                 symbol = symbol,
                 recipient = recipient,
+                txHash = txHash,
                 onDone = {
                     navController.navigate("home") {
                         popUpTo("home") { inclusive = true }

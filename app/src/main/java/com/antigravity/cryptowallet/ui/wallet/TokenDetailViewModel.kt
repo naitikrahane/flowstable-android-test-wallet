@@ -136,43 +136,59 @@ class TokenDetailViewModel @Inject constructor(
                     contractAddress = if (symbol.uppercase() == "ETH" || symbol.uppercase() == "BNB") "Native Token" else ""
                 }
             }
-
-            // Fetch Chart, OHLC and Initial Price
+            
+            // Fast Price Fetch
             launch {
                 try {
-                    // Fetch OHLC for Candlestick (1 year = 365 days)
-                    ohlcData = coinRepository.getOHLC(id, "365")
+                    val priceMap = coinRepository.getSimplePrice(id)
+                    val simplePrice = priceMap[id]?.get("usd") ?: 0.0
+                    if (simplePrice > 0) {
+                         price = String.format("$%.2f", simplePrice)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // Fetch Chart, OHLC (Secondary)
+            launch {
+                try {
+                    // Fetch OHLC for Candlestick (Start with shorter duration for reliability: 30 days)
+                    ohlcData = coinRepository.getOHLC(id, "30")
                     
-                    // Also fetch regular chart for trend/price if needed (optional, using OHLC close instead)
                     if (ohlcData.isNotEmpty()) {
                         val lastCandle = ohlcData.last()
-                        graphPoints = ohlcData.map { it[4] } // Use close prices for mini-trend
-                        price = String.format("$%.2f", lastCandle[4])
+                        graphPoints = ohlcData.map { it[4] } // Use close prices
+                        // Only update price if simple price failed or this is fresher
+                         if (price == "Loading..." || price == "Error") {
+                             price = String.format("$%.2f", lastCandle[4])
+                        }
+                    } else {
+                         throw Exception("Empty OHLC")
                     }
 
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    // Fallback to regular chart if OHLC fails
+                    // Fallback to regular chart
                     try {
-                        val chart = coinRepository.getMarketChart(id)
+                        val chart = coinRepository.getMarketChart(id, "30")
                         graphPoints = chart.prices.map { it[1] }
-                        val currentPrice = graphPoints.lastOrNull() ?: 0.0
-                        price = String.format("$%.2f", currentPrice)
-                    } catch (e2: Exception) {
-                         // Fallback to Simple Price if Chart fails
-                        try {
-                            val priceMap = coinRepository.getSimplePrice(id)
-                            val simplePrice = priceMap[id]?.get("usd") ?: 0.0
-                            price = if (simplePrice > 0) String.format("$%.2f", simplePrice) else "N/A"
-                        } catch (e3: Exception) {
-                            price = "Error"
+                        if (graphPoints.isNotEmpty()) {
+                            val currentPrice = graphPoints.lastOrNull() ?: 0.0
+                            if (price == "Loading..." || price == "Error") {
+                                price = String.format("$%.2f", currentPrice)
+                            }
                         }
+                    } catch (e2: Exception) {
+                         if (price == "Loading...") {
+                             price = "Error"
+                         }
                     }
                     
-                    // Generate mock OHLC data if everything fails so UI isn't empty
+                    // Generate mock OHLC data if everything fails so UI isn't empty (but try not to suppress error price)
                     if (ohlcData.isEmpty()) {
                         ohlcData = List(30) { i ->
-                            val base = 100.0 + Math.random() * 20.0
+                            val base = if (price.replace("$","").replace(",","").toDoubleOrNull() != null) price.replace("$","").replace(",","").toDouble() else 100.0
                             listOf(i.toDouble(), base, base + 5, base - 5, base + 2)
                         }
                     }

@@ -44,33 +44,38 @@ private val VioletScheme = lightColorScheme(
     primary = Color(0xFF4B0082), onPrimary = White, background = White, onBackground = Color(0xFF4B0082), surface = White, onSurface = Color(0xFF4B0082)
 )
 
+
+private val DarkScheme = darkColorScheme(
+    primary = White, onPrimary = Black, background = Black, onBackground = White, surface = Black, onSurface = White
+)
+
 val BrutalistTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
+        fontSize = 40.sp,
+        lineHeight = 48.sp,
         letterSpacing = (-0.25).sp
     ),
     displayMedium = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.5.sp
     ),
     labelLarge = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
         letterSpacing = 0.1.sp
     )
 )
@@ -78,15 +83,20 @@ val BrutalistTypography = Typography(
 @Composable
 fun CryptoWalletTheme(
     themeType: ThemeType = ThemeType.DEFAULT,
+    darkTheme: Boolean = androidx.compose.foundation.isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when (themeType) {
-        ThemeType.DEFAULT -> DefaultScheme
-        ThemeType.MIDNIGHT -> MidnightScheme
-        ThemeType.FOREST -> ForestScheme
-        ThemeType.CRIMSON -> CrimsonScheme
-        ThemeType.SLATE -> SlateScheme
-        ThemeType.VIOLET -> VioletScheme
+    val colorScheme = if (darkTheme) {
+        DarkScheme
+    } else {
+        when (themeType) {
+            ThemeType.DEFAULT -> DefaultScheme
+            ThemeType.MIDNIGHT -> MidnightScheme
+            ThemeType.FOREST -> ForestScheme
+            ThemeType.CRIMSON -> CrimsonScheme
+            ThemeType.SLATE -> SlateScheme
+            ThemeType.VIOLET -> VioletScheme
+        }
     }
 
     MaterialTheme(
