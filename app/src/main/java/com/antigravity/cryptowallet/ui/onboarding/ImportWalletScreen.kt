@@ -175,28 +175,27 @@ fun ImportWalletScreen(
             text = if (viewModel.isLoading) "Importing..." else "Import Wallet",
             enabled = !viewModel.isLoading,
             onClick = {
-                if (viewModel.isLoading) return@BrutalistButton
-                
-                val trimmedInput = input.trim()
-                if (trimmedInput.isEmpty()) {
-                    error = "Please enter your ${if (importType == 0) "seed phrase" else "private key"}"
-                    return@BrutalistButton
-                }
-                
-                if (importType == 0) {
-                    viewModel.importWallet(trimmedInput) { success ->
-                         if (success) {
-                            onWalletImported()
+                if (!viewModel.isLoading) {
+                    val trimmedInput = input.trim()
+                    if (trimmedInput.isEmpty()) {
+                        error = "Please enter your ${if (importType == 0) "seed phrase" else "private key"}"
+                    } else {
+                        if (importType == 0) {
+                            viewModel.importWallet(trimmedInput) { success ->
+                                if (success) {
+                                    onWalletImported()
+                                } else {
+                                    error = "Invalid seed phrase. Please check your words and try again."
+                                }
+                            }
                         } else {
-                            error = "Invalid seed phrase. Please check your words and try again."
-                        }
-                    }
-                } else {
-                    viewModel.importPrivateKey(trimmedInput) { success ->
-                        if (success) {
-                            onWalletImported()
-                        } else {
-                            error = "Invalid private key format. Please verify and try again."
+                            viewModel.importPrivateKey(trimmedInput) { success ->
+                                if (success) {
+                                    onWalletImported()
+                                } else {
+                                    error = "Invalid private key format. Please verify and try again."
+                                }
+                            }
                         }
                     }
                 }

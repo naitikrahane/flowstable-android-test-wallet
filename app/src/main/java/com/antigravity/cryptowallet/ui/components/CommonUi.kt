@@ -49,12 +49,12 @@ fun BrutalistButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    // Neo-brutalist Shadow Effect
     val offset = if (isPressed) 0.dp else 4.dp
 
     Box(
         modifier = modifier
-            .padding(bottom = 4.dp, end = 4.dp) // Space for shadow
+            .fillMaxWidth()
+            .height(60.dp) // Total height including shadow
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -62,10 +62,11 @@ fun BrutalistButton(
                 onClick = onClick
             )
     ) {
-        // Shadow Layer
+        // Shadow Layer (fixed at bottom-right)
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxWidth()
+                .height(56.dp)
                 .offset(4.dp, 4.dp)
                 .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
         )

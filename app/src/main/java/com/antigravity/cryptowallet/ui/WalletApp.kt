@@ -9,20 +9,17 @@ import com.antigravity.cryptowallet.ui.wallet.WalletScreen
 
 import com.antigravity.cryptowallet.ui.onboarding.SplashScreen
 
+import com.antigravity.cryptowallet.ui.onboarding.CreateWalletScreen
+import com.antigravity.cryptowallet.ui.onboarding.ImportWalletScreen
+
 @Composable
 fun WalletApp(
-    startDestination: String = "splash",
-    secureStorage: com.antigravity.cryptowallet.data.security.SecureStorage = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>().let { 
-        // We can't easily get it here without Hilt, but MainActivity passes it.
-        // Actually, let's just use the startDestination passed from MainActivity as the 'next' destination after splash.
-        "intro" 
-    }
+    startDestination: String = "intro"
 ) {
     val navController = rememberNavController()
     
-    // Determine the real starting point (intro vs home) after splash
-    // For now, we take the one passed from MainActivity
-    val actualStartDestination = startDestination 
+    // The "real" screen to show after splash
+    val nextDestination = startDestination 
 
     NavHost(
         navController = navController, 
@@ -43,7 +40,7 @@ fun WalletApp(
         composable("splash") {
             SplashScreen(
                 onNavigateNext = {
-                    navController.navigate(actualStartDestination) {
+                    navController.navigate(nextDestination) {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
@@ -56,7 +53,7 @@ fun WalletApp(
             )
         }
         composable("create_wallet") {
-            com.antigravity.cryptowallet.ui.onboarding.CreateWalletScreen(
+            CreateWalletScreen(
                 onWalletCreated = {
                     navController.navigate("security_setup") {
                         popUpTo("intro") { inclusive = true }
@@ -65,7 +62,7 @@ fun WalletApp(
             )
         }
         composable("import_wallet") {
-            com.antigravity.cryptowallet.ui.onboarding.ImportWalletScreen(
+            ImportWalletScreen(
                 onWalletImported = {
                     navController.navigate("security_setup") {
                         popUpTo("intro") { inclusive = true }

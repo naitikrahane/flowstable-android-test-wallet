@@ -33,11 +33,17 @@ fun IntroScreen(
             .drawBehind {
                 // Brutalist Grid Pattern
                 val cellSize = 40.dp.toPx()
-                for (x in 0..size.width.toInt() step cellSize.toInt()) {
-                    drawLine(onBg.copy(alpha = 0.05f), Offset(x.toFloat(), 0f), Offset(x.toFloat(), size.height), 1f)
-                }
-                for (y in 0..size.height.toInt() step cellSize.toInt()) {
-                    drawLine(onBg.copy(alpha = 0.05f), Offset(0f, y.toFloat()), Offset(size.width, y.toFloat()), 1f)
+                if (cellSize > 0) {
+                    var x = 0f
+                    while (x < size.width) {
+                        drawLine(onBg.copy(alpha = 0.05f), Offset(x, 0f), Offset(x, size.height), 1f)
+                        x += cellSize
+                    }
+                    var y = 0f
+                    while (y < size.height) {
+                        drawLine(onBg.copy(alpha = 0.05f), Offset(0f, y), Offset(size.width, y), 1f)
+                        y += cellSize
+                    }
                 }
             }
             .padding(24.dp),
