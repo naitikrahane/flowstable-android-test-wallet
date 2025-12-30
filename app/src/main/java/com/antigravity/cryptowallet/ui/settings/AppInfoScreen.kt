@@ -38,8 +38,6 @@ fun AppInfoScreen(
     val appVersion = packageInfo?.versionName ?: "Unknown"
     val androidVersion = "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
 
-    val themes = ThemeType.values().toList()
-
     Column(
         modifier = Modifier
             .fillMaxSize()

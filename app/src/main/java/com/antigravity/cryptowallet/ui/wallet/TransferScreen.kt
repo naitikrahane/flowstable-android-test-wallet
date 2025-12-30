@@ -31,7 +31,6 @@ import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
 @Composable
-@Composable
 fun TransferScreen(
     onBack: () -> Unit,
     onTransactionSuccess: (String, String, String, String) -> Unit,
