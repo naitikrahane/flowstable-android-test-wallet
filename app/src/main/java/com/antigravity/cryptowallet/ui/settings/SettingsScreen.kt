@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
@@ -36,6 +37,7 @@ fun SettingsScreen(
     onViewAppInfo: () -> Unit,
     onAppearance: () -> Unit,
     onWalletConnect: () -> Unit,
+    onManageWallets: () -> Unit,
     viewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     Column(
@@ -45,8 +47,20 @@ fun SettingsScreen(
             .padding(16.dp)
     ) {
         BrutalistHeader("Settings")
+        
+        Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            item {
+                SettingsSection("Wallet")
+                SettingsItem(
+                    title = "Manage Wallets",
+                    subtitle = "Add, switch, or remove wallets",
+                    icon = Icons.Default.AccountBalanceWallet,
+                    onClick = onManageWallets
+                )
+            }
+            
             item {
                 SettingsSection("Security")
                 SettingsItem(
@@ -66,7 +80,7 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "Reveal Private Key",
                     subtitle = "Sensitive access key",
-                    icon = Icons.Default.Lock, // Maybe different icon if available
+                    icon = Icons.Default.Lock,
                     onClick = onRevealPrivateKey
                 )
             }
@@ -82,7 +96,7 @@ fun SettingsScreen(
                 SettingsItem(
                     title = "Appearance",
                     subtitle = "Themes & Fonts",
-                    icon = Icons.Default.Edit, // Using Edit as a safe fallback or import Palette properly
+                    icon = Icons.Default.Edit,
                     onClick = onAppearance
                 )
                 SettingsItem(

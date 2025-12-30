@@ -34,7 +34,8 @@ fun MainScreen(
     onNavigateToAppearance: () -> Unit,
     onNavigateToTokenDetail: (String) -> Unit,
     onNavigateToWalletConnect: () -> Unit,
-    onNavigateToRevealPrivateKey: () -> Unit
+    onNavigateToRevealPrivateKey: () -> Unit,
+    onNavigateToWalletManager: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -89,7 +90,8 @@ fun MainScreen(
                     onRevealPrivateKey = onNavigateToRevealPrivateKey,
                     onViewAppInfo = onNavigateToAppInfo,
                     onAppearance = onNavigateToAppearance,
-                    onWalletConnect = onNavigateToWalletConnect
+                    onWalletConnect = onNavigateToWalletConnect,
+                    onManageWallets = onNavigateToWalletManager
                 )
             }
         }

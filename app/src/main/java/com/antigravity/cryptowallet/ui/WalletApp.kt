@@ -60,7 +60,8 @@ fun WalletApp(startDestination: String = "intro") {
                 onNavigateToAppearance = { navController.navigate("appearance") },
                 onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") },
                 onNavigateToWalletConnect = { navController.navigate("wallet_connect") },
-                onNavigateToRevealPrivateKey = { navController.navigate("reveal_private_key_verify") }
+                onNavigateToRevealPrivateKey = { navController.navigate("reveal_private_key_verify") },
+                onNavigateToWalletManager = { navController.navigate("wallet_manager") }
             )
         }
 
@@ -200,6 +201,13 @@ fun WalletApp(startDestination: String = "intro") {
         composable("appearance") {
             com.antigravity.cryptowallet.ui.settings.AppearanceScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("wallet_manager") {
+            com.antigravity.cryptowallet.ui.settings.WalletManagerScreen(
+                onBack = { navController.popBackStack() },
+                onAddWallet = { navController.navigate("intro") }
             )
         }
         

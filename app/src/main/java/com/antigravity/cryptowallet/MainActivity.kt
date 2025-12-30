@@ -5,10 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.antigravity.cryptowallet.data.repository.ThemeRepository
 import com.antigravity.cryptowallet.ui.WalletApp
 import com.antigravity.cryptowallet.ui.theme.CryptoWalletTheme
+import com.antigravity.cryptowallet.ui.theme.ThemeType
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -17,12 +20,12 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
 
     @Inject
     lateinit var secureStorage: com.antigravity.cryptowallet.data.security.SecureStorage
+    
+    @Inject
+    lateinit var themeRepository: ThemeRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-
-        
         
         val startDestination = if (secureStorage.hasWallet()) {
             if (secureStorage.hasPin()) "unlock" else "security_setup"
@@ -31,9 +34,10 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         }
 
         setContent {
-            val settingsViewModel: com.antigravity.cryptowallet.ui.settings.SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
-            val currentTheme = settingsViewModel.currentTheme.collectAsState(initial = com.antigravity.cryptowallet.ui.theme.ThemeType.DEFAULT)
-            CryptoWalletTheme(themeType = currentTheme.value) {
+            // Directly observe the theme repository for changes
+            val currentTheme by themeRepository.currentTheme.collectAsState()
+            
+            CryptoWalletTheme(themeType = currentTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = androidx.compose.material3.MaterialTheme.colorScheme.background

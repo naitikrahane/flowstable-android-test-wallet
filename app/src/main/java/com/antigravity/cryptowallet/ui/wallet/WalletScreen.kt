@@ -244,50 +244,85 @@ fun WalletScreen(
 
         if (showReceiveDialog) {
             Dialog(onDismissRequest = { showReceiveDialog = false }) {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(24.dp))
-                        .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(24.dp))
-                        .clip(RoundedCornerShape(24.dp))
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    BrutalistHeader("Receive Assets")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("to ${viewModel.activeNetwork.name}", fontSize = 12.sp, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Receive Assets",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "on ${viewModel.activeNetwork.name}", 
+                            fontSize = 12.sp, 
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    if (viewModel.address.length > 10) { 
-                        val qrBitmap = remember(viewModel.address) {
-                            QrCodeGenerator.generateQrCode(viewModel.address)
+                        if (viewModel.address.length > 10) { 
+                            val qrBitmap = remember(viewModel.address) {
+                                QrCodeGenerator.generateQrCode(viewModel.address)
+                            }
+                            // White background for QR code visibility
+                            Box(
+                                modifier = Modifier
+                                    .background(Color.White, RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Image(
+                                    bitmap = qrBitmap.asImageBitmap(),
+                                    contentDescription = "Wallet Address QR Code",
+                                    modifier = Modifier.size(180.dp)
+                                )
+                            }
                         }
-                        Image(
-                            bitmap = qrBitmap.asImageBitmap(),
-                            contentDescription = "Wallet Address QR Code",
-                            modifier = Modifier.size(200.dp)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Address in a copyable box
+                        androidx.compose.material3.Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    clipboardManager.setText(AnnotatedString(viewModel.address))
+                                }
+                        ) {
+                            Text(
+                                text = viewModel.address,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Text(
+                            text = "Tap to copy address",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        BrutalistButton(
+                            text = "Close", 
+                            onClick = { showReceiveDialog = false },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = viewModel.address,
-                        fontWeight = FontWeight.Bold,
-                        color = BrutalBlack,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.clickable {
-                            clipboardManager.setText(AnnotatedString(viewModel.address))
-                        }
-                    )
-                    Text(
-                        text = "(Tap address to copy)",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    BrutalistButton(text = "Close", onClick = { showReceiveDialog = false })
                 }
             }
         }
