@@ -3,28 +3,39 @@ package com.antigravity.cryptowallet.ui.browser
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -33,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.antigravity.cryptowallet.ui.components.BrutalistHeader
+import com.antigravity.cryptowallet.ui.components.BrutalistButton
 import com.antigravity.cryptowallet.ui.theme.BrutalBlack
 import com.antigravity.cryptowallet.ui.theme.BrutalWhite
 
@@ -42,7 +53,8 @@ data class DApp(
     val description: String,
     val url: String,
     val iconChar: Char,
-    val category: String
+    val category: String,
+    val color: Color
 )
 
 @Composable
@@ -50,7 +62,7 @@ fun BrowserScreen(
     viewModel: BrowserViewModel = hiltViewModel()
 ) {
     val walletRepository = viewModel.walletRepository
-    var url by remember { mutableStateOf("") } // Empty URL means Home
+    var url by remember { mutableStateOf("") }
     var inputUrl by remember { mutableStateOf("") }
     var webView: WebView? by remember { mutableStateOf(null) }
     
@@ -62,324 +74,215 @@ fun BrowserScreen(
     var bridgeInstance by remember { mutableStateOf<Web3Bridge?>(null) }
     var showNetworkSelector by remember { mutableStateOf(false) }
 
-    // DApp List
     val dapps = listOf(
-        DApp("PancakeSwap", "Top DEX on BNB", "https://pancakeswap.finance", 'P', "DEFI"),
-        DApp("Uniswap", "World's largest DEX", "https://app.uniswap.org", 'U', "DEFI"),
-        DApp("Sushi", "DeFi Market", "https://www.sushi.com", 'S', "DEFI"),
-        DApp("Blockscan", "Explore multiple chains", "https://blockscan.com", 'B', "UTILITIES"),
-        DApp("Debank", "Portfolio Tracker", "https://debank.com", 'D', "UTILITIES"),
-        DApp("Revoke", "Manage allowances", "https://revoke.cash", 'R', "UTILITIES"),
-        DApp("Lens", "Web3 Social", "https://www.lens.xyz", 'L', "SOCIAL")
+        DApp("PancakeSwap", "Top DEX on BNB", "https://pancakeswap.finance", 'P', "DEFI", Color(0xFF1FC7D4)),
+        DApp("Uniswap", "Swap anytime, anywhere", "https://app.uniswap.org", 'U', "DEFI", Color(0xFFFF007A)),
+        DApp("OpenSea", "NFT Marketplace", "https://opensea.io", 'O', "NFT", Color(0xFF2081E2)),
+        DApp("1inch", "DeFi Aggregator", "https://app.1inch.io", '1', "DEFI", Color(0xFF0C162D)),
+        DApp("Aave", "Liquidity Protocol", "https://app.aave.com", 'A', "DEFI", Color(0xFFB6509E)),
+        DApp("Blur", "NFT Exchange", "https://blur.io", 'B', "NFT", Color(0xFFFF5200)),
+        DApp("Lens", "Web3 Social", "https://www.lens.xyz", 'L', "SOCIAL", Color(0xFFABFE2C)),
+        DApp("Snapshot", "DAO Voting", "https://snapshot.org", 'S', "DAO", Color(0xFFFFB503))
     )
-    
-    val groupedDapps = dapps.groupBy { it.category }
 
-    // Handle Back Press to go Home
     BackHandler(enabled = url.isNotEmpty()) {
         if (webView?.canGoBack() == true) {
             webView?.goBack()
         } else {
-            url = "" // Go home
+            url = ""
             inputUrl = ""
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BrutalWhite)
-    ) {
-        if (showNetworkSelector) {
-            androidx.compose.ui.window.Dialog(onDismissRequest = { showNetworkSelector = false }) {
-                Column(
-                    modifier = Modifier
-                        .background(BrutalWhite)
-                        .border(2.dp, BrutalBlack)
-                        .padding(24.dp)
-                ) {
-                    BrutalistHeader("Select Network")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    LazyColumn {
-                        items(viewModel.networks) { net ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { 
-                                        viewModel.switchNetwork(net.id)
-                                        activeNetwork = viewModel.activeNetwork
-                                        showNetworkSelector = false
-                                        // RELOAD page to apply new network
-                                        webView?.reload()
-                                    }
-                                    .background(if (activeNetwork.id == net.id) BrutalBlack else BrutalWhite)
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(net.name, color = if (activeNetwork.id == net.id) BrutalWhite else BrutalBlack, fontWeight = FontWeight.Bold)
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                }
-            }
-        }
-
-        // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(2.dp, BrutalBlack)
-                .background(BrutalBlack)
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(onClick = { url = ""; inputUrl = "" }) {
-                Icon(Icons.Default.Home, contentDescription = "Home", tint = BrutalWhite)
-            }
-            
-            Row(
-                modifier = Modifier
-                    .border(1.dp, BrutalWhite)
-                    .clickable { showNetworkSelector = true }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(modifier = Modifier.size(6.dp).background(androidx.compose.ui.graphics.Color.Green))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(activeNetwork.name.uppercase(), color = BrutalWhite, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-
-        // Validation / Search Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(2.dp, BrutalBlack)
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BasicTextField(
-                value = inputUrl,
+    Scaffold(
+        topBar = {
+            BrowserTopBar(
+                currentUrl = inputUrl,
                 onValueChange = { inputUrl = it },
-                textStyle = TextStyle(
-                    color = BrutalBlack,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                keyboardActions = KeyboardActions(onGo = {
+                onGo = {
                     if (inputUrl.isNotEmpty()) {
                         url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
                     }
-                }),
-                singleLine = true,
-                cursorBrush = SolidColor(BrutalBlack),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp),
-                decorationBox = { innerTextField ->
-                     if (inputUrl.isEmpty()) {
-                         Text("Search or type URL", color = Color.Gray)
-                     }
-                     innerTextField()
-                }
+                },
+                onHome = {
+                    url = ""
+                    inputUrl = ""
+                },
+                isHome = url.isEmpty(),
+                activeNetworkName = activeNetwork.name,
+                onNetworkClick = { showNetworkSelector = true }
             )
-            IconButton(onClick = {
-                if (inputUrl.isNotEmpty()) {
-                    url = if (!inputUrl.startsWith("http")) "https://$inputUrl" else inputUrl
-                }
-            }) {
-                Icon(Icons.Default.Search, contentDescription = "Go", tint = BrutalBlack)
-            }
         }
-
-        // Content
-        Box(modifier = Modifier.weight(1f)) {
-            if (url.isEmpty()) {
-                // Discover DApps Home
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    item {
-                        Text(
-                            "DISCOVER DAPPS", 
-                            fontSize = 32.sp, 
-                            fontWeight = FontWeight.Black,
-                            modifier = Modifier.padding(bottom = 24.dp)
-                        )
-                    }
-                    
-                    groupedDapps.forEach { (category, dappList) ->
-                        item {
-                            Text(category, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
-                            LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                modifier = Modifier.padding(bottom = 24.dp)
-                            ) {
-                                items(dappList) { dapp ->
-                                    DAppCard(dapp) {
-                                        url = dapp.url
-                                        inputUrl = dapp.url
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                // WebView
-                AndroidView(
-                    factory = { context ->
-                        WebView(context).apply {
-                            settings.javaScriptEnabled = true
-                            settings.domStorageEnabled = true
-                            settings.databaseEnabled = true
-                            settings.loadWithOverviewMode = true
-                            settings.useWideViewPort = true
-                            
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                                settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                            }
-                            
-                            val bridge = Web3Bridge(this, address, { activeNetwork.chainId }) { request ->
-                                pendingRequest = request
-                            }
-                            bridgeInstance = bridge
-                            addJavascriptInterface(bridge, "androidWallet")
-                            
-                            webViewClient = object : WebViewClient() {
-                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                                    super.onPageStarted(view, url, favicon)
-                                    // We re-create the bridge in fact because chainId might change
-                                    val currentBridge = Web3Bridge(view!!, address, { activeNetwork.chainId }) { request ->
-                                        pendingRequest = request
-                                    }
-                                    bridgeInstance = currentBridge
-                                    view.evaluateJavascript(currentBridge.getInjectionJs(), null)
-                                }
-                                
-                                override fun onPageFinished(view: WebView?, url: String?) {
-                                    super.onPageFinished(view, url)
-                                    if (url != null) inputUrl = url
-                                    bridgeInstance?.let { view?.evaluateJavascript(it.getInjectionJs(), null) }
-                                }
-                            }
-                            
-                            webChromeClient = android.webkit.WebChromeClient()
-                            loadUrl(url)
-                            webView = this
-                        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (showNetworkSelector) {
+                NetworkSelector(
+                    networks = viewModel.networks,
+                    activeNetworkId = activeNetwork.id,
+                    onSelect = { net ->
+                        viewModel.switchNetwork(net.id)
+                        activeNetwork = viewModel.activeNetwork
+                        showNetworkSelector = false
+                        webView?.reload()
                     },
-                    update = {
-                        if (it.url != url && url.isNotEmpty()) {
-                            it.loadUrl(url)
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
+                    onDismiss = { showNetworkSelector = false }
                 )
             }
 
-            // Confirmation Overlay (Same as before)
-            pendingRequest?.let { request ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f))
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(BrutalWhite)
-                            .border(4.dp, BrutalBlack)
-                            .padding(24.dp)
-                    ) {
-                        Text(
-                            text = request.method.replace("eth_", "").replace("personal_", "").uppercase(),
-                            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Black
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "A dApp is requesting to ${request.method.lowercase()}.",
-                            fontSize = 14.sp
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 200.dp)
-                                .border(1.dp, BrutalBlack)
-                                .padding(8.dp)
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            Text(
-                                text = request.params,
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            com.antigravity.cryptowallet.ui.components.BrutalistButton(
-                                text = "Reject",
-                                onClick = {
-                                    bridgeInstance?.sendError(request.id, "User rejected")
-                                    pendingRequest = null
-                                },
-                                modifier = Modifier.weight(1f),
-                                inverted = true
-                            )
-                            com.antigravity.cryptowallet.ui.components.BrutalistButton(
-                                text = "Confirm",
-                                onClick = {
-                                    // Handle logic based on method
-                                    handleWeb3Request(request, bridgeInstance, walletRepository) { targetChainId ->
-                                        val targetNet = viewModel.networks.find { it.chainId == targetChainId }
-                                        if (targetNet != null) {
-                                            viewModel.switchNetwork(targetNet.id)
-                                            activeNetwork = viewModel.activeNetwork
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    }
-                                    pendingRequest = null
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+            if (url.isEmpty()) {
+                BrowserHome(
+                    dapps = dapps,
+                    onDappClick = { dapp ->
+                        url = dapp.url
+                        inputUrl = dapp.url
                     }
-                }
+                )
+            } else {
+                BrowserWebView(
+                    url = url,
+                    onUpdateUrl = { newUrl -> 
+                        inputUrl = newUrl 
+                    },
+                    onWebViewCreated = { wv -> 
+                        webView = wv 
+                    },
+                    address = address,
+                    chainId = activeNetwork.chainId,
+                    onPendingRequest = { req, bridge ->
+                        pendingRequest = req
+                        bridgeInstance = bridge
+                    }
+                )
             }
         }
+    }
 
-        // Navigation Controls (Only show if URL is active)
-        if (url.isNotEmpty()) {
+    // Web3 Request Dialog
+    pendingRequest?.let { request ->
+        Web3RequestDialog(
+            request = request,
+            onConfirm = {
+                handleWeb3Request(request, bridgeInstance, walletRepository) { targetChainId ->
+                    val targetNet = viewModel.networks.find { it.chainId == targetChainId }
+                     if (targetNet != null) {
+                        viewModel.switchNetwork(targetNet.id)
+                        activeNetwork = viewModel.activeNetwork
+                        true
+                    } else {
+                        false
+                    }
+                }
+                pendingRequest = null
+            },
+            onReject = {
+                 bridgeInstance?.sendError(request.id, "User rejected")
+                 pendingRequest = null
+            }
+        )
+    }
+}
+
+@Composable
+fun BrowserTopBar(
+    currentUrl: String,
+    onValueChange: (String) -> Unit,
+    onGo: () -> Unit,
+    onHome: () -> Unit,
+    isHome: Boolean,
+    activeNetworkName: String,
+    onNetworkClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .shadow(elevation = 4.dp)
+            .padding(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (!isHome) {
+                IconButton(onClick = onHome, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Home, contentDescription = "Home", tint = MaterialTheme.colorScheme.onSurface)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            // Search Bar
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(2.dp, BrutalBlack)
-                    .background(BrutalWhite)
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .weight(1f)
+                    .height(44.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(22.dp))
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { webView?.goBack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = BrutalBlack)
+                Icon(
+                    Icons.Default.Search, 
+                    contentDescription = null, 
+                    tint = Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                BasicTextField(
+                    value = currentUrl,
+                    onValueChange = onValueChange,
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = { onGo() }),
+                    modifier = Modifier.weight(1f),
+                    decorationBox = { innerTextField ->
+                        if (currentUrl.isEmpty()) {
+                            Text("Search DApps or Enter URL", color = Color.Gray, fontSize = 14.sp)
+                        }
+                        innerTextField()
+                    },
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                )
+                if (currentUrl.isNotEmpty()) {
+                     IconButton(
+                         onClick = { onValueChange("") },
+                         modifier = Modifier.size(20.dp)
+                     ) {
+                         Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                     }
                 }
-                IconButton(onClick = { webView?.reload() }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = BrutalBlack)
-                }
-                IconButton(onClick = { webView?.goForward() }) {
-                    Icon(Icons.Default.ArrowForward, contentDescription = "Forward", tint = BrutalBlack)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Network Badge
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier
+                    .clickable { onNetworkClick() }
+                    .height(36.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.size(8.dp).background(Color.Green, CircleShape))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        activeNetworkName.take(3).uppercase(), 
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
@@ -387,33 +290,260 @@ fun BrowserScreen(
 }
 
 @Composable
-fun DAppCard(dapp: DApp, onClick: () -> Unit) {
-    Column(
+fun BrowserHome(dapps: List<DApp>, onDappClick: (DApp) -> Unit) {
+    LazyColumn(
         modifier = Modifier
-            .width(140.dp)
-            .height(160.dp)
-            .border(2.dp, BrutalBlack)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(BrutalBlack),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(dapp.iconChar.toString(), color = BrutalWhite, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        item {
+            Text(
+                "Favorites",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
-        
-        Column {
-            Text(dapp.name, fontWeight = FontWeight.Bold, maxLines = 1)
-            Text(dapp.description, fontSize = 10.sp, color = Color.Gray, lineHeight = 12.sp, maxLines = 2)
+
+        item {
+             LazyVerticalGrid(
+                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
+                modifier = Modifier.height(200.dp), // Height estimate
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(dapps.take(8)) { dapp ->
+                    DAppIconItem(dapp, onClick = { onDappClick(dapp) })
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "Explore",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+
+        items(dapps.size) { index ->
+            DAppListItem(dapp = dapps[index], onClick = { onDappClick(dapps[index]) })
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
-// Logic to handle signing / sending
+@Composable
+fun DAppIconItem(dapp: DApp, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .background(dapp.color, RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                dapp.iconChar.toString(),
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            dapp.name,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+fun DAppListItem(dapp: DApp, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(dapp.color, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                dapp.iconChar.toString(),
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                dapp.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                dapp.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun BrowserWebView(
+    url: String,
+    onUpdateUrl: (String) -> Unit,
+    onWebViewCreated: (WebView) -> Unit,
+    address: String,
+    chainId: Long,
+    onPendingRequest: (Web3Bridge.Web3Request, Web3Bridge) -> Unit
+) {
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.databaseEnabled = true
+                settings.loadWithOverviewMode = true
+                settings.useWideViewPort = true
+                
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                }
+                
+                val bridge = Web3Bridge(this, address, { chainId }) { request ->
+                    val bridgeRef = this.tag as? Web3Bridge ?: return@Web3Bridge
+                    onPendingRequest(request, bridgeRef)
+                }
+                this.tag = bridge // Store bridge in tag to retrieve later if needed
+                addJavascriptInterface(bridge, "androidWallet")
+                
+                webViewClient = object : WebViewClient() {
+                    override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                         super.onPageStarted(view, url, favicon)
+                         // Re-inject bridge if needed
+                         val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
+                         view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                    }
+                    
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        if (url != null) onUpdateUrl(url)
+                        val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
+                        view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                    }
+                }
+                
+                loadUrl(url)
+                onWebViewCreated(this)
+            }
+        },
+        update = {
+            // Update logic if needed
+        },
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+@Composable
+fun NetworkSelector(
+    networks: List<com.antigravity.cryptowallet.data.blockchain.Network>,
+    activeNetworkId: String,
+    onSelect: (com.antigravity.cryptowallet.data.blockchain.Network) -> Unit,
+    onDismiss: () -> Unit
+) {
+     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Select Network",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                LazyColumn {
+                    items(networks.size) { index ->
+                        val net = networks[index]
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(net) }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = net.id == activeNetworkId,
+                                onClick = { onSelect(net) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(net.name, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        if (index < networks.size - 1) {
+                            Divider(color = Color.LightGray.copy(alpha = 0.5f))
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                BrutalistButton(
+                    text = "Cancel",
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    inverted = true
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun Web3RequestDialog(
+    request: Web3Bridge.Web3Request,
+    onConfirm: () -> Unit,
+    onReject: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onReject,
+        title = { Text("Sign Request") },
+        text = {
+            Column {
+                Text("Method: ${request.method}")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Params: ${request.params.take(100)}...",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("Confirm") }
+        },
+        dismissButton = {
+            TextButton(onClick = onReject) { Text("Reject") }
+        }
+    )
+}
+
 private fun handleWeb3Request(
     request: Web3Bridge.Web3Request,
     bridge: Web3Bridge?,
@@ -473,4 +603,3 @@ private fun handleWeb3Request(
         }
     }
 }
-

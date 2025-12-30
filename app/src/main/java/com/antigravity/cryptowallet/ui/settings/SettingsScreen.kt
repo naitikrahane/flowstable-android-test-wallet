@@ -33,6 +33,7 @@ fun SettingsScreen(
     onViewSeedPhrase: () -> Unit,
     onRevealPrivateKey: () -> Unit,
     onViewAppInfo: () -> Unit,
+    onAppearance: () -> Unit,
     onWalletConnect: () -> Unit,
     viewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
@@ -78,8 +79,14 @@ fun SettingsScreen(
                     onClick = onWalletConnect
                 )
                 SettingsItem(
-                    title = "About & Appearance",
-                    subtitle = "Version, Theme, Info",
+                    title = "Appearance",
+                    subtitle = "Themes & Fonts",
+                    icon = androidx.compose.material.icons.filled.Palette,
+                    onClick = onAppearance
+                )
+                SettingsItem(
+                    title = "About",
+                    subtitle = "Version & Info",
                     icon = Icons.Default.Info,
                     onClick = onViewAppInfo
                 )

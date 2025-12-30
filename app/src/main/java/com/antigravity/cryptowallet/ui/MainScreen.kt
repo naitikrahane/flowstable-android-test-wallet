@@ -87,6 +87,7 @@ fun MainScreen(
                     onViewSeedPhrase = onNavigateToRevealSeed,
                     onRevealPrivateKey = onNavigateToRevealPrivateKey,
                     onViewAppInfo = onNavigateToAppInfo,
+                    onAppearance = { navController.navigate("appearance") },
                     onWalletConnect = onNavigateToWalletConnect
                 )
             }

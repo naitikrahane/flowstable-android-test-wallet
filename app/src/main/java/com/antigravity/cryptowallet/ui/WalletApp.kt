@@ -195,6 +195,12 @@ fun WalletApp(startDestination: String = "intro") {
                 onBack = { navController.popBackStack() }
             )
         }
+
+        composable("appearance") {
+            com.antigravity.cryptowallet.ui.settings.AppearanceScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
         
         // ... (unlock blocks skipped for brevity, keeping existing structure if possible or cleaning up)
 

@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.antigravity.cryptowallet.ui.components.BrutalistHeader
-import com.antigravity.cryptowallet.ui.theme.ThemeType
 import androidx.compose.runtime.collectAsState
 
 @Composable
@@ -63,17 +62,7 @@ fun AppInfoScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Theme Selection
-        InfoSection("Select Theme")
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(themes) { theme ->
-                ThemeItem(
-                    theme = theme,
-                    isSelected = viewModel.currentTheme.collectAsState(initial = ThemeType.DEFAULT).value == theme,
-                    onSelect = { viewModel.setTheme(theme) }
-                )
-            }
-        }
+        // Theme Selection moved to AppearanceScreen
     }
 }
 
@@ -103,25 +92,4 @@ fun InfoItem(label: String, value: String) {
     }
 }
 
-@Composable
-fun ThemeItem(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(2.dp, if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Gray)
-            .background(if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background)
-            .clickable { onSelect() }
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = theme.name.replace("_", " "),
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
-        )
-        if (isSelected) {
-            Icon(Icons.Default.Check, contentDescription = "Selected", tint = MaterialTheme.colorScheme.background)
-        }
-    }
-}
+
