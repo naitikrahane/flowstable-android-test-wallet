@@ -37,10 +37,19 @@ class AssetRepository @Inject constructor(
         val savedTokens = tokenDao.getAllTokens().first()
         // Ensure defaults if empty (basic logic)
         if (savedTokens.isEmpty()) {
-             // Basic defaults
+             // Basic defaults for major chains
              val defaults = listOf(
+                 // Ethereum
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7", decimals = 6, chainId = "eth", coingeckoId = "tether"),
-                 TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals = 6, chainId = "eth", coingeckoId = "usd-coin")
+                 TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals = 6, chainId = "eth", coingeckoId = "usd-coin"),
+                 
+                 // BSC
+                 TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0x55d398326f99059ff775485246999027b3197955", decimals = 18, chainId = "bsc", coingeckoId = "tether"),
+                 TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", decimals = 18, chainId = "bsc", coingeckoId = "usd-coin"),
+                 
+                 // Polygon
+                 TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", decimals = 6, chainId = "matic", coingeckoId = "tether"),
+                 TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", decimals = 6, chainId = "matic", coingeckoId = "usd-coin")
              )
              defaults.forEach { tokenDao.insertToken(it) }
         }
@@ -68,9 +77,6 @@ class AssetRepository @Inject constructor(
             val net = networkRepository.getNetwork(netId)
             val balance = blockchainService.getBalance(net.rpcUrl, address)
             
-            // Only add if balance > 0 or it's the active network (optional, but let's show all main ones for now or filter)
-            // User wants to see balances.
-            
             val ethBalance = BigDecimal(balance).divide(BigDecimal.TEN.pow(18))
             
             val marketData = marketMap[net.coingeckoId]
@@ -78,12 +84,21 @@ class AssetRepository @Inject constructor(
             val balanceUsd = ethBalance.multiply(BigDecimal(price))
             val imageUrl = marketData?.image
 
+            // Smart Formatting
+            val balanceStr = if (ethBalance.compareTo(BigDecimal.ZERO) == 0) {
+                "0.00 ${net.symbol}"
+            } else if (ethBalance < BigDecimal("0.0001")) {
+                String.format("%.6f %s", ethBalance, net.symbol)
+            } else {
+                String.format("%.4f %s", ethBalance, net.symbol)
+            }
+
             resultList.add(
                 AssetUiModel(
                     id = "native-${net.id}",
                     symbol = net.symbol,
                     name = net.name,
-                    balance = String.format("%.4f %s", ethBalance, net.symbol),
+                    balance = balanceStr,
                     balanceUsd = String.format("$%.2f", balanceUsd),
                     iconUrl = imageUrl,
                     networkName = net.name,
@@ -105,12 +120,20 @@ class AssetRepository @Inject constructor(
                 val balanceUsd = tokenBalance.multiply(BigDecimal(price))
                 val imageUrl = marketData?.image
 
+                val balanceStr = if (tokenBalance.compareTo(BigDecimal.ZERO) == 0) {
+                    "0.00 ${token.symbol}"
+                } else if (tokenBalance < BigDecimal("0.0001")) {
+                    String.format("%.6f %s", tokenBalance, token.symbol)
+                } else {
+                    String.format("%.4f %s", tokenBalance, token.symbol)
+                }
+
                 resultList.add(
                     AssetUiModel(
                         id = "token-${token.id}",
                         symbol = token.symbol,
                         name = token.name,
-                        balance = String.format("%.4f %s", tokenBalance, token.symbol),
+                        balance = balanceStr,
                         balanceUsd = String.format("$%.2f", balanceUsd),
                         iconUrl = imageUrl,
                         networkName = net.name,
