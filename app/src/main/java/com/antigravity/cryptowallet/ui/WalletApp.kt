@@ -7,13 +7,26 @@ import androidx.navigation.compose.rememberNavController
 import com.antigravity.cryptowallet.ui.onboarding.IntroScreen
 import com.antigravity.cryptowallet.ui.wallet.WalletScreen
 
+import com.antigravity.cryptowallet.ui.onboarding.SplashScreen
+
 @Composable
-fun WalletApp(startDestination: String = "intro") {
+fun WalletApp(
+    startDestination: String = "splash",
+    secureStorage: com.antigravity.cryptowallet.data.security.SecureStorage = androidx.hilt.navigation.compose.hiltViewModel<com.antigravity.cryptowallet.ui.security.SecurityViewModel>().let { 
+        // We can't easily get it here without Hilt, but MainActivity passes it.
+        // Actually, let's just use the startDestination passed from MainActivity as the 'next' destination after splash.
+        "intro" 
+    }
+) {
     val navController = rememberNavController()
     
+    // Determine the real starting point (intro vs home) after splash
+    // For now, we take the one passed from MainActivity
+    val actualStartDestination = startDestination 
+
     NavHost(
         navController = navController, 
-        startDestination = startDestination,
+        startDestination = "splash",
         enterTransition = {
             androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }) + androidx.compose.animation.fadeIn()
         },
@@ -27,6 +40,15 @@ fun WalletApp(startDestination: String = "intro") {
             androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }) + androidx.compose.animation.fadeOut()
         }
     ) {
+        composable("splash") {
+            SplashScreen(
+                onNavigateNext = {
+                    navController.navigate(actualStartDestination) {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
         composable("intro") {
             IntroScreen(
                 onCreateWallet = { navController.navigate("create_wallet") },

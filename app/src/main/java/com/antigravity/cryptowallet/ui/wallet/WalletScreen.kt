@@ -378,52 +378,71 @@ fun WalletScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text(
-            text = "TOTAL BALANCE",
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = viewModel.totalBalanceUsd,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 42.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = (-1).sp
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                .padding(24.dp)
+        ) {
+            Column {
+                Text(
+                    text = "TOTAL BALANCE",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = viewModel.totalBalanceUsd,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-1.5).sp
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
         
         // Tabs
         Row(
-            modifier = Modifier.fillMaxWidth().border(1.dp, BrutalBlack, RoundedCornerShape(12.dp)).clip(RoundedCornerShape(12.dp))
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .background(if (viewModel.selectedTab == 0) BrutalBlack else BrutalWhite)
+                    .background(if (viewModel.selectedTab == 0) MaterialTheme.colorScheme.onBackground else Color.Transparent)
                     .clickable { viewModel.selectedTab = 0 }
                     .padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Assets", 
-                    color = if (viewModel.selectedTab == 0) BrutalWhite else BrutalBlack,
-                    fontWeight = FontWeight.Bold
+                    text = "ASSETS", 
+                    color = if (viewModel.selectedTab == 0) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 12.sp,
+                    letterSpacing = 1.sp
                 )
             }
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .background(if (viewModel.selectedTab == 1) BrutalBlack else BrutalWhite)
+                    .background(if (viewModel.selectedTab == 1) MaterialTheme.colorScheme.onBackground else Color.Transparent)
                     .clickable { viewModel.selectedTab = 1 }
                     .padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "NFTs", 
-                    color = if (viewModel.selectedTab == 1) BrutalWhite else BrutalBlack,
-                    fontWeight = FontWeight.Bold
+                    text = "NFTS", 
+                    color = if (viewModel.selectedTab == 1) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 12.sp,
+                    letterSpacing = 1.sp
                 )
             }
         }
@@ -438,40 +457,78 @@ fun WalletScreen(
             ) {
                 items(viewModel.assets.size) { index ->
                     val asset = viewModel.assets[index]
-                    Row(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, BrutalBlack, RoundedCornerShape(16.dp))
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { onNavigateToTokenDetail(asset.symbol) }
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 4.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(BrutalBlack, androidx.compose.foundation.shape.CircleShape)
-                                    .clip(androidx.compose.foundation.shape.CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
+                        // Shadow
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .offset(3.dp, 3.dp)
+                                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                        )
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+                                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable { onNavigateToTokenDetail(asset.symbol) }
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Symbol Icon
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape)
+                                        .border(2.dp, MaterialTheme.colorScheme.onBackground, androidx.compose.foundation.shape.CircleShape)
+                                        .clip(androidx.compose.foundation.shape.CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        asset.symbol.take(1), 
+                                        color = MaterialTheme.colorScheme.onPrimary, 
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 20.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text(
+                                        text = asset.symbol, 
+                                        fontWeight = FontWeight.Black, 
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 18.sp
+                                    )
+                                    Text(
+                                        text = asset.networkName.uppercase(), 
+                                        fontSize = 10.sp, 
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Gray,
+                                        letterSpacing = 1.sp
+                                    )
+                                }
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    asset.symbol.take(1), 
-                                    color = BrutalWhite, 
-                                    fontWeight = FontWeight.Black,
+                                    text = asset.balanceUsd, 
+                                    fontWeight = FontWeight.Black, 
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 18.sp
                                 )
+                                Text(
+                                    text = asset.balance, 
+                                    fontSize = 12.sp, 
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
                             }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text(asset.symbol, fontWeight = FontWeight.Bold, color = BrutalBlack)
-                                Text(asset.networkName, fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray)
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(asset.balanceUsd, fontWeight = FontWeight.Bold, color = BrutalBlack)
-                            Text(asset.balance, fontSize = 12.sp, color = BrutalBlack)
                         }
                     }
                 }

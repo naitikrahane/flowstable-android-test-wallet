@@ -80,24 +80,29 @@ fun AppearanceScreen(
 fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit) {
     val previewColors = getThemePreviewColors(theme)
     
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelect() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
-                MaterialTheme.colorScheme.primaryContainer 
-            else 
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 4.dp else 1.dp
-        )
+            .padding(bottom = 4.dp, end = 4.dp)
     ) {
+        // Shadow
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(4.dp, 4.dp)
+                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+        )
+        
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(
+                    if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                    RoundedCornerShape(16.dp)
+                )
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onSelect() }
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -107,7 +112,7 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(previewColors.background)
-                    .border(1.dp, previewColors.text.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    .border(2.dp, previewColors.text.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(6.dp),
@@ -150,29 +155,31 @@ fun ThemeOptionCard(theme: ThemeType, isSelected: Boolean, onSelect: () -> Unit)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = getThemeDisplayName(theme),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = getThemeDescription(theme),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = getThemeDescription(theme).uppercase(),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp
                 )
             }
             
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                        .size(32.dp)
+                        .background(MaterialTheme.colorScheme.onBackground, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Check, 
                         contentDescription = "Selected", 
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(18.dp)
+                        tint = MaterialTheme.colorScheme.background,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

@@ -46,49 +46,65 @@ fun BrutalistButton(
     val backgroundColor = if (inverted) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
     val contentColor = if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background
     
-    // Manual ripple or state effect for "Fast interactions"
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    val currentBg = if (!enabled) Color.Gray else if (isPressed) contentColor else backgroundColor
-    val currentContent = if (!enabled) Color.LightGray else if (isPressed) backgroundColor else contentColor
+    // Neo-brutalist Shadow Effect
+    val offset = if (isPressed) 0.dp else 4.dp
 
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = currentBg,
-            contentColor = currentContent,
-            disabledContainerColor = Color.Gray,
-            disabledContentColor = Color.LightGray
-        ),
-        shape = RoundedCornerShape(24.dp), // More rounded as requested
-        border = BorderStroke(2.dp, if (inverted) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background),
+    Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        interactionSource = interactionSource,
-        contentPadding = PaddingValues(horizontal = 16.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-            Text(
-                text = text.uppercase(),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
+            .padding(bottom = 4.dp, end = 4.dp) // Space for shadow
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick
             )
+    ) {
+        // Shadow Layer
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(4.dp, 4.dp)
+                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+        )
+
+        // Main Button Layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .offset(x = 4.dp - offset, y = 4.dp - offset)
+                .background(
+                    if (enabled) backgroundColor else Color.Gray,
+                    RoundedCornerShape(12.dp)
+                )
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = contentColor
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(
+                    text = text.uppercase(),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = if (enabled) contentColor else Color.LightGray,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
+                )
+            }
         }
     }
 }
@@ -137,37 +153,60 @@ fun BrutalistTextField(
 
 @Composable
 fun BrutalistHeader(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.displayMedium,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(vertical = 24.dp)
-    )
+    Box(
+        modifier = Modifier
+            .padding(vertical = 16.dp)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+            .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text.uppercase(),
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
 }
 
 @Composable
 fun BrutalistInfoRow(label: String, value: String) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 6.dp)
     ) {
-        Text(
-            text = label.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+        // Shadow
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(3.dp, 3.dp)
+                .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontFamily = FontFamily.Monospace,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        
+        // Content
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }
 
