@@ -67,7 +67,7 @@ fun SplashScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "AG",
+                    text = "FS",
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Black
@@ -78,7 +78,7 @@ fun SplashScreen(
 
             // Text with Brutalist style
             Text(
-                text = "ANTIGRAVITY",
+                text = "FLOWSTABLE",
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Black,

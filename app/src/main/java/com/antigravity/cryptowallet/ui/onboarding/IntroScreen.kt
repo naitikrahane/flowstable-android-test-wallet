@@ -62,7 +62,7 @@ fun IntroScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                text = "ANTIGRAVITY",
+                text = "FLOWSTABLE",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary,
