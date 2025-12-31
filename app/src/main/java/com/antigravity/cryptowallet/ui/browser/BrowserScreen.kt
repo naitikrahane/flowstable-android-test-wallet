@@ -45,7 +45,8 @@ data class DApp(
     val url: String,
     val iconChar: Char,
     val category: String,
-    val color: Color
+    val color: Color,
+    val iconUrl: String? = null
 )
 
 @Composable
@@ -67,14 +68,14 @@ fun BrowserScreen(
     val scope = rememberCoroutineScope()
 
     val dapps = listOf(
-        DApp("PancakeSwap", "Top DEX on BNB", "https://pancakeswap.finance", 'P', "DEFI", Color(0xFF1FC7D4)),
-        DApp("Uniswap", "Swap anytime, anywhere", "https://app.uniswap.org", 'U', "DEFI", Color(0xFFFF007A)),
-        DApp("OpenSea", "NFT Marketplace", "https://opensea.io", 'O', "NFT", Color(0xFF2081E2)),
-        DApp("1inch", "DeFi Aggregator", "https://app.1inch.io", '1', "DEFI", Color(0xFF0C162D)),
-        DApp("Aave", "Liquidity Protocol", "https://app.aave.com", 'A', "DEFI", Color(0xFFB6509E)),
-        DApp("Blur", "NFT Exchange", "https://blur.io", 'B', "NFT", Color(0xFFFF5200)),
-        DApp("Lens", "Web3 Social", "https://www.lens.xyz", 'L', "SOCIAL", Color(0xFFABFE2C)),
-        DApp("Snapshot", "DAO Voting", "https://snapshot.org", 'S', "DAO", Color(0xFFFFB503))
+        DApp("PancakeSwap", "Top DEX on BNB", "https://pancakeswap.finance", 'P', "DEFI", Color(0xFF1FC7D4), "https://assets.coingecko.com/coins/images/12632/large/pancakeswap-cake-logo_1.png"),
+        DApp("Uniswap", "Swap anytime, anywhere", "https://app.uniswap.org", 'U', "DEFI", Color(0xFFFF007A), "https://assets.coingecko.com/coins/images/12504/large/uniswap-uni.png"),
+        DApp("OpenSea", "NFT Marketplace", "https://opensea.io", 'O', "NFT", Color(0xFF2081E2), "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/OpenSea_icon.svg/1024px-OpenSea_icon.svg.png"),
+        DApp("1inch", "DeFi Aggregator", "https://app.1inch.io", '1', "DEFI", Color(0xFF0C162D), "https://assets.coingecko.com/coins/images/13469/large/1inch-token.png"),
+        DApp("Aave", "Liquidity Protocol", "https://app.aave.com", 'A', "DEFI", Color(0xFFB6509E), "https://assets.coingecko.com/coins/images/12645/large/AAVE.png"),
+        DApp("Blur", "NFT Exchange", "https://blur.io", 'B', "NFT", Color(0xFFFF5200), "https://assets.coingecko.com/coins/images/28453/large/blur.png"),
+        DApp("Lens", "Web3 Social", "https://www.lens.xyz", 'L', "SOCIAL", Color(0xFFABFE2C), "https://assets.coingecko.com/coins/images/28905/large/lens.png"),
+        DApp("Snapshot", "DAO Voting", "https://snapshot.org", 'S', "DAO", Color(0xFFFFB503), "https://raw.githubusercontent.com/snapshot-labs/brand/master/icon/icon-256.png")
     )
 
     BackHandler(enabled = url.isNotEmpty()) {
@@ -344,15 +345,25 @@ fun DAppIconItem(dapp: DApp, onClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .size(48.dp) // Reduced from 56dp
-                .background(dapp.color, RoundedCornerShape(14.dp)), // Adjusted radius
+                .background(dapp.color, RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(14.dp)), // Adjusted radius
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                dapp.iconChar.toString(),
-                color = Color.White,
-                fontSize = 20.sp, // Reduced from 24sp
-                fontWeight = FontWeight.Bold
-            )
+            if (dapp.iconUrl != null) {
+                coil.compose.AsyncImage(
+                    model = dapp.iconUrl,
+                    contentDescription = dapp.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            } else {
+                Text(
+                    dapp.iconChar.toString(),
+                    color = Color.White,
+                    fontSize = 20.sp, // Reduced from 24sp
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -378,15 +389,25 @@ fun DAppListItem(dapp: DApp, onClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .size(40.dp) // Reduced size
-                .background(dapp.color, RoundedCornerShape(10.dp)),
+                .background(dapp.color, RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                dapp.iconChar.toString(),
-                color = Color.White,
-                fontSize = 18.sp, // Reduced font size
-                fontWeight = FontWeight.Bold
-            )
+            if (dapp.iconUrl != null) {
+                coil.compose.AsyncImage(
+                    model = dapp.iconUrl,
+                    contentDescription = dapp.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            } else {
+                Text(
+                    dapp.iconChar.toString(),
+                    color = Color.White,
+                    fontSize = 18.sp, // Reduced font size
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
