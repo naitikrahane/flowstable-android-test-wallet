@@ -1,4 +1,4 @@
-# Add project specific ProGuard rule here.
+# Add project specific ProGuard rules here.
 -keep class org.web3j.** { *; }
 -dontwarn org.web3j.**
 -keep class com.fasterxml.jackson.** { *; }
