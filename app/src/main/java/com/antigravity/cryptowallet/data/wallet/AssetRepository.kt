@@ -8,6 +8,8 @@ import com.antigravity.cryptowallet.data.db.TokenEntity
 import com.antigravity.cryptowallet.data.models.AssetUiModel
 import com.antigravity.cryptowallet.data.models.CoinMarketItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -35,19 +37,12 @@ class AssetRepository @Inject constructor(
 
         // 1. Ensure Defaults
         val savedTokens = tokenDao.getAllTokens().first()
-        // Ensure defaults if empty (basic logic)
         if (savedTokens.isEmpty()) {
-             // Basic defaults for major chains
              val defaults = listOf(
-                 // Ethereum
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7", decimals = 6, chainId = "eth", coingeckoId = "tether"),
                  TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals = 6, chainId = "eth", coingeckoId = "usd-coin"),
-                 
-                 // BSC
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0x55d398326f99059ff775485246999027b3197955", decimals = 18, chainId = "bsc", coingeckoId = "tether"),
                  TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", decimals = 18, chainId = "bsc", coingeckoId = "usd-coin"),
-                 
-                 // Polygon
                  TokenEntity(symbol = "USDT", name = "Tether", contractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", decimals = 6, chainId = "matic", coingeckoId = "tether"),
                  TokenEntity(symbol = "USDC", name = "USD Coin", contractAddress = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", decimals = 6, chainId = "matic", coingeckoId = "usd-coin")
              )
@@ -68,83 +63,90 @@ class AssetRepository @Inject constructor(
             emptyMap()
         }
 
-        val resultList = mutableListOf<AssetUiModel>()
+        // 3. Fetch Native Balances in Parallel
+        val nativeAssetsDeferred = networkRepository.networks.map { net ->
+            async {
+                try {
+                    val balance = blockchainService.getBalance(net.rpcUrl, address)
+                    val ethBalance = BigDecimal(balance).divide(BigDecimal.TEN.pow(18))
+                    
+                    val marketData = marketMap[net.coingeckoId]
+                    val price = marketData?.currentPrice ?: 0.0
+                    val balanceUsd = ethBalance.multiply(BigDecimal(price))
+                    val imageUrl = marketData?.image
 
-        // 3. Fetch Native Balances
-        val mainNetworks = listOf("eth", "bsc", "matic", "base", "arb", "op")
-        
-        for (netId in mainNetworks) {
-            val net = networkRepository.getNetwork(netId)
-            val balance = blockchainService.getBalance(net.rpcUrl, address)
-            
-            val ethBalance = BigDecimal(balance).divide(BigDecimal.TEN.pow(18))
-            
-            val marketData = marketMap[net.coingeckoId]
-            val price = marketData?.currentPrice ?: 0.0
-            val balanceUsd = ethBalance.multiply(BigDecimal(price))
-            val imageUrl = marketData?.image
+                    val balanceStr = if (ethBalance.compareTo(BigDecimal.ZERO) == 0) {
+                        "0.00 ${net.symbol}"
+                    } else if (ethBalance < BigDecimal("0.0001")) {
+                        String.format("%.6f %s", ethBalance, net.symbol)
+                    } else {
+                        String.format("%.4f %s", ethBalance, net.symbol)
+                    }
 
-            // Smart Formatting
-            val balanceStr = if (ethBalance.compareTo(BigDecimal.ZERO) == 0) {
-                "0.00 ${net.symbol}"
-            } else if (ethBalance < BigDecimal("0.0001")) {
-                String.format("%.6f %s", ethBalance, net.symbol)
-            } else {
-                String.format("%.4f %s", ethBalance, net.symbol)
-            }
-
-            resultList.add(
-                AssetUiModel(
-                    id = "native-${net.id}",
-                    symbol = net.symbol,
-                    name = net.name,
-                    balance = balanceStr,
-                    balanceUsd = String.format("$%.2f", balanceUsd),
-                    iconUrl = imageUrl,
-                    networkName = net.name,
-                    rawBalance = ethBalance.toDouble(),
-                    price = price
-                )
-            )
-        }
-
-        // 4. Fetch Token Balances
-        for (token in allTokens) {
-            val net = networkRepository.getNetwork(token.chainId)
-            if (token.contractAddress != null) {
-                val balance = blockchainService.getTokenBalance(net.rpcUrl, token.contractAddress, address)
-                val tokenBalance = BigDecimal(balance).divide(BigDecimal.TEN.pow(token.decimals))
-                
-                val marketData = token.coingeckoId?.let { marketMap[it] }
-                val price = marketData?.currentPrice ?: 0.0
-                val balanceUsd = tokenBalance.multiply(BigDecimal(price))
-                val imageUrl = marketData?.image
-
-                val balanceStr = if (tokenBalance.compareTo(BigDecimal.ZERO) == 0) {
-                    "0.00 ${token.symbol}"
-                } else if (tokenBalance < BigDecimal("0.0001")) {
-                    String.format("%.6f %s", tokenBalance, token.symbol)
-                } else {
-                    String.format("%.4f %s", tokenBalance, token.symbol)
-                }
-
-                resultList.add(
                     AssetUiModel(
-                        id = "token-${token.id}",
-                        symbol = token.symbol,
-                        name = token.name,
+                        id = "native-${net.id}",
+                        symbol = net.symbol,
+                        name = net.name,
                         balance = balanceStr,
                         balanceUsd = String.format("$%.2f", balanceUsd),
                         iconUrl = imageUrl,
                         networkName = net.name,
-                        rawBalance = tokenBalance.toDouble(),
+                        rawBalance = ethBalance.toDouble(),
                         price = price
                     )
-                )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
             }
         }
 
-        _assets.tryEmit(resultList)
+        // 4. Fetch Token Balances in Parallel
+        val tokenAssetsDeferred = allTokens.map { token ->
+            async {
+                try {
+                    val net = networkRepository.getNetwork(token.chainId)
+                    if (token.contractAddress != null) {
+                        val balance = blockchainService.getTokenBalance(net.rpcUrl, token.contractAddress, address)
+                        val tokenBalance = BigDecimal(balance).divide(BigDecimal.TEN.pow(token.decimals))
+                        
+                        val marketData = token.coingeckoId?.let { marketMap[it] }
+                        val price = marketData?.currentPrice ?: 0.0
+                        val balanceUsd = tokenBalance.multiply(BigDecimal(price))
+                        val imageUrl = marketData?.image
+    
+                        val balanceStr = if (tokenBalance.compareTo(BigDecimal.ZERO) == 0) {
+                            "0.00 ${token.symbol}"
+                        } else if (tokenBalance < BigDecimal("0.0001")) {
+                            String.format("%.6f %s", tokenBalance, token.symbol)
+                        } else {
+                            String.format("%.4f %s", tokenBalance, token.symbol)
+                        }
+    
+                        AssetUiModel(
+                            id = "token-${token.id}",
+                            symbol = token.symbol,
+                            name = token.name,
+                            balance = balanceStr,
+                            balanceUsd = String.format("$%.2f", balanceUsd),
+                            iconUrl = imageUrl,
+                            networkName = net.name,
+                            rawBalance = tokenBalance.toDouble(),
+                            price = price
+                        )
+                    } else null
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
+            }
+        }
+
+        // Wait for all
+        val nativeAssets = nativeAssetsDeferred.awaitAll().filterNotNull()
+        val tokenAssets = tokenAssetsDeferred.awaitAll().filterNotNull()
+        
+        _assets.tryEmit(nativeAssets + tokenAssets)
     }
 
     suspend fun addToken(address: String, symbol: String, decimals: Int, chainId: String, name: String) {
