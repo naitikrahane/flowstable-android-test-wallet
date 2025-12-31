@@ -46,12 +46,12 @@ fun BrutalistButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    val offset = if (isPressed) 0.dp else 4.dp
+    val offset = if (isPressed) 0.dp else 3.dp
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(60.dp) // Total height including shadow
+            .height(52.dp) // Reduced from 60dp
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -59,12 +59,12 @@ fun BrutalistButton(
                 onClick = onClick
             )
     ) {
-        // Shadow Layer (fixed at bottom-right)
+        // Shadow Layer
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .offset(4.dp, 4.dp)
+                .height(48.dp)
+                .offset(3.dp, 3.dp)
                 .background(MaterialTheme.colorScheme.onBackground, RoundedCornerShape(12.dp))
         )
 
@@ -72,8 +72,8 @@ fun BrutalistButton(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .offset(x = 4.dp - offset, y = 4.dp - offset)
+                .height(48.dp)
+                .offset(x = 3.dp - offset, y = 3.dp - offset)
                 .background(
                     if (enabled) backgroundColor else Color.Gray,
                     RoundedCornerShape(12.dp)
@@ -89,16 +89,17 @@ fun BrutalistButton(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = contentColor
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
                 Text(
                     text = text.uppercase(),
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = if (enabled) contentColor else Color.LightGray,
                         fontWeight = FontWeight.Black,
+                        fontSize = 13.sp,
                         letterSpacing = 1.sp
                     )
                 )
@@ -153,16 +154,17 @@ fun BrutalistTextField(
 fun BrutalistHeader(text: String) {
     Box(
         modifier = Modifier
-            .padding(vertical = 16.dp)
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+            .padding(vertical = 12.dp)
             .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
             text = text.uppercase(),
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            letterSpacing = 1.sp
         )
     }
 }

@@ -342,35 +342,37 @@ fun WalletScreen(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(8.dp).background(Color.Green, androidx.compose.foundation.shape.CircleShape))
+                    Box(modifier = Modifier.size(6.dp).background(Color.Green, androidx.compose.foundation.shape.CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         viewModel.activeNetwork.name.uppercase(),
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
                     )
                 }
             }
             Row {
                 androidx.compose.material3.IconButton(
-                    onClick = { viewModel.refresh() }
+                    onClick = { viewModel.refresh() },
+                    modifier = Modifier.size(40.dp)
                 ) {
                     androidx.compose.material3.Icon(
                         imageVector = Icons.Filled.Refresh,
                         contentDescription = "Refresh",
                         tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
                 androidx.compose.material3.IconButton(
-                    onClick = onSetupSecurity
+                    onClick = onSetupSecurity,
+                    modifier = Modifier.size(40.dp)
                 ) {
                     androidx.compose.material3.Icon(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Security Settings",
                         tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -381,24 +383,24 @@ fun WalletScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-                .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                .padding(24.dp)
+                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.03f), RoundedCornerShape(16.dp))
+                .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
+                .padding(20.dp)
         ) {
             Column {
                 Text(
                     text = "TOTAL BALANCE",
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.sp
                 )
                 Text(
                     text = viewModel.totalBalanceUsd,
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 48.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Black,
-                    letterSpacing = (-1.5).sp
+                    letterSpacing = (-1).sp
                 )
             }
         }
@@ -425,7 +427,7 @@ fun WalletScreen(
                     text = "ASSETS", 
                     color = if (viewModel.selectedTab == 0) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Black,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     letterSpacing = 1.sp
                 )
             }
@@ -441,7 +443,7 @@ fun WalletScreen(
                     text = "NFTS", 
                     color = if (viewModel.selectedTab == 1) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Black,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     letterSpacing = 1.sp
                 )
             }
@@ -485,17 +487,17 @@ fun WalletScreen(
                                 // Symbol Icon
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
-                                        .background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape)
+                                        .size(36.dp)
+                                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape)
                                         .border(2.dp, MaterialTheme.colorScheme.onBackground, androidx.compose.foundation.shape.CircleShape)
                                         .clip(androidx.compose.foundation.shape.CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         asset.symbol.take(1), 
-                                        color = MaterialTheme.colorScheme.onPrimary, 
+                                        color = MaterialTheme.colorScheme.onBackground, 
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 20.sp
+                                        fontSize = 16.sp
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(16.dp))
@@ -504,7 +506,7 @@ fun WalletScreen(
                                         text = asset.symbol, 
                                         fontWeight = FontWeight.Black, 
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 18.sp
+                                        fontSize = 16.sp
                                     )
                                     Text(
                                         text = asset.networkName.uppercase(), 
@@ -520,7 +522,7 @@ fun WalletScreen(
                                     text = asset.balanceUsd, 
                                     fontWeight = FontWeight.Black, 
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 18.sp
+                                    fontSize = 16.sp
                                 )
                                 Text(
                                     text = asset.balance, 
