@@ -64,6 +64,10 @@ class WalletConnectManager @Inject constructor(
                 scope.launch { _sessionRequests.emit(sessionRequest) }
             }
 
+            override fun onSessionExtend(session: Wallet.Model.Session) {
+                // Handle session extend if needed
+            }
+
             override fun onAuthRequest(authRequest: Wallet.Model.AuthRequest, verifyContext: Wallet.Model.VerifyContext) {}
             override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {}
             override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {}
