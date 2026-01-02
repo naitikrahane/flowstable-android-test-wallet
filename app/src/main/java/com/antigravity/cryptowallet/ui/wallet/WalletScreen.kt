@@ -149,7 +149,7 @@ fun WalletScreen(
     viewModel: WalletViewModel = hiltViewModel(),
     onSetupSecurity: () -> Unit = {},
     onNavigateToSend: () -> Unit = {},
-    onNavigateToTokenDetail: (String) -> Unit = {}
+    onNavigateToTokenDetail: (String, String) -> Unit = { _, _ -> }
 ) {
     Column(
         modifier = Modifier

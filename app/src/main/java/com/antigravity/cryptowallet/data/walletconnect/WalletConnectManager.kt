@@ -55,16 +55,15 @@ class WalletConnectManager @Inject constructor(
             Log.e("WalletConnect", "Web3Wallet Init Error: ${error.throwable.stackTraceToString()}")
         }
 
-        val walletDelegate = object : Web3Wallet.WalletDelegate {
-            override fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal) {
+            override fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext) {
                 scope.launch { _sessionProposals.emit(sessionProposal) }
             }
 
-            override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest) {
+            override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
                 scope.launch { _sessionRequests.emit(sessionRequest) }
             }
 
-            override fun onAuthRequest(authRequest: Wallet.Model.AuthRequest) {}
+            override fun onAuthRequest(authRequest: Wallet.Model.AuthRequest, verifyContext: Wallet.Model.VerifyContext) {}
             override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {}
             override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {}
             override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {}
