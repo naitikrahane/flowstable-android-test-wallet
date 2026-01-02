@@ -2,7 +2,13 @@ package com.antigravity.cryptowallet.ui.browser
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.WebChromeClient
+import android.webkit.ValueCallback
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -417,12 +423,12 @@ fun BrowserWebView(
     var progress by remember { mutableStateOf(0) }
     var showProgress by remember { mutableStateOf(false) }
 
-    var fileUploadCallback by remember { mutableStateOf<android.webkit.ValueCallback<android.net.Uri?>?>(null) }
-    var fileUploadCallbackArray by remember { mutableStateOf<android.webkit.ValueCallback<Array<android.net.Uri>>?>(null) }
+    var fileUploadCallback by remember { mutableStateOf<ValueCallback<Uri?>?>(null) }
+    var fileUploadCallbackArray by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
 
-    val filePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
-    ) { uri ->
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
         if (uri != null) {
             fileUploadCallback?.onReceiveValue(uri)
             fileUploadCallbackArray?.onReceiveValue(arrayOf(uri))
@@ -462,7 +468,6 @@ fun BrowserWebView(
                         }
                         android.webkit.CookieManager.getInstance().setAcceptCookie(true)
                         
-                        // Spoof User Agent for better compatibility
                         userAgentString = "${userAgentString} Antigravity/1.0 TrustWallet/1.0 MetaMask/1.0"
                     }
                     
@@ -472,14 +477,14 @@ fun BrowserWebView(
                     this.tag = bridge
                     addJavascriptInterface(bridge, "androidWallet")
                     
-                    webChromeClient = object : android.webkit.WebChromeClient() {
+                    webChromeClient = object : WebChromeClient() {
                         override fun onProgressChanged(view: WebView?, newProgress: Int) {
                             progress = newProgress
                             showProgress = newProgress < 100
                         }
 
                         override fun onJsAlert(view: WebView?, url: String?, message: String?, result: android.webkit.JsResult?): Boolean {
-                            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             result?.confirm()
                             return true
                         }
@@ -496,11 +501,11 @@ fun BrowserWebView(
 
                         override fun onShowFileChooser(
                             webView: WebView?,
-                            filePathCallback: android.webkit.ValueCallback<Array<android.net.Uri>>?,
+                            filePathCallback: ValueCallback<Array<Uri>>?,
                             fileChooserParams: FileChooserParams?
                         ): Boolean {
                             fileUploadCallbackArray = filePathCallback
-                            filePickerLauncher.launch("*/*") // Or use params?.acceptTypes to refine
+                            filePickerLauncher.launch("*/*")
                             return true
                         }
                     }
