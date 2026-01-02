@@ -62,6 +62,10 @@ android {
             excludes += "META-INF/DEPENDENCIES"
         }
     }
+
+    sourceSets {
+        getByName("main").java.srcDirs("src/main/java")
+    }
 }
 
 dependencies {
