@@ -17,6 +17,9 @@ interface TokenDao {
     @Query("SELECT * FROM tokens WHERE id = :id")
     suspend fun getTokenById(id: Long): TokenEntity?
 
+    @Query("SELECT * FROM tokens WHERE symbol = :symbol AND chainId = :chainId LIMIT 1")
+    suspend fun getToken(symbol: String, chainId: String): TokenEntity?
+
     @Query("SELECT * FROM tokens WHERE symbol = :symbol LIMIT 1")
     suspend fun getTokenBySymbol(symbol: String): TokenEntity?
 }

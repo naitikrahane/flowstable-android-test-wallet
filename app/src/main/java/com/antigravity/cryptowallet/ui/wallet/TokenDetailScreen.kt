@@ -35,18 +35,24 @@ import com.antigravity.cryptowallet.utils.QrCodeGenerator
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+
 @Composable
 fun TokenDetailScreen(
     symbol: String,
+    chainId: String,
     onBack: () -> Unit,
     onNavigateToSend: () -> Unit,
     viewModel: TokenDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     var showReceiveDialog by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
     
-    LaunchedEffect(symbol) {
-        viewModel.loadTokenData(symbol)
+    LaunchedEffect(symbol, chainId) {
+        viewModel.loadTokenData(symbol, chainId)
     }
 
     val price = viewModel.price
@@ -55,9 +61,12 @@ fun TokenDetailScreen(
     val points = viewModel.graphPoints
     val transactions = viewModel.transactions
     val walletAddress = viewModel.walletAddress
+    val logoUrl = viewModel.logoUrl
     
     val isPositive = if (points.size > 1) points.last() >= points.first() else true
-    val trendColor = if (isPositive) Color(0xFF00C853) else Color.Red
+    
+    // ... (Receive Dialog) -> keeping code structure implied, just editing header section below? 
+    // Wait, replacing a chunk. I will replace the start of function down to header.
 
     // Receive Dialog
     if (showReceiveDialog) {
@@ -77,7 +86,7 @@ fun TokenDetailScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+                    // ... dialog content stays same ...
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     if (walletAddress.length > 10) {
@@ -90,7 +99,7 @@ fun TokenDetailScreen(
                             modifier = Modifier.size(180.dp)
                         )
                     }
-                    
+                    // ...
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
@@ -141,6 +150,21 @@ fun TokenDetailScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            if (logoUrl != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(logoUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "$symbol Logo",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
             }
             BrutalistHeader(symbol)
         }

@@ -155,6 +155,9 @@ fun BrowserScreen(
                     onPendingRequest = { req, bridge ->
                         pendingRequest = req
                         bridgeInstance = bridge
+                    },
+                    onWalletConnectUri = { uri ->
+                         viewModel.pair(uri)
                     }
                 )
             }
@@ -418,7 +421,8 @@ fun BrowserWebView(
     onWebViewCreated: (WebView) -> Unit,
     address: String,
     chainIdProvider: () -> Long,
-    onPendingRequest: (Web3Bridge.Web3Request, Web3Bridge) -> Unit
+    onPendingRequest: (Web3Bridge.Web3Request, Web3Bridge) -> Unit,
+    onWalletConnectUri: (String) -> Unit
 ) {
     var progress by remember { mutableStateOf(0) }
     var showProgress by remember { mutableStateOf(false) }
@@ -516,6 +520,10 @@ fun BrowserWebView(
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
                             val uri = request?.url ?: return false
+                            if (uri.scheme == "wc") {
+                                onWalletConnectUri(uri.toString())
+                                return true
+                            }
                             if (uri.scheme == "http" || uri.scheme == "https") {
                                 return false // Load in WebView
                             }

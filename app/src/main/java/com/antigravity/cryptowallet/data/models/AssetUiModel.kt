@@ -8,6 +8,7 @@ data class AssetUiModel(
     val balanceUsd: String,
     val iconUrl: String?,
     val networkName: String,
+    val chainId: String,
     val rawBalance: Double,
     val price: Double
 )

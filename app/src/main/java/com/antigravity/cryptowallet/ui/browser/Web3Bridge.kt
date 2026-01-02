@@ -21,13 +21,17 @@ class Web3Bridge(
 
     fun getInjectionJs(): String {
         val chainId = chainIdProvider()
+        val hexChainId = "0x" + chainId.toString(16)
         return """
             (function() {
                 if (window.ethereum && window.ethereum.isAntigravity) return;
 
                 const address = '$address';
-                const chainId = '0x${chainId.toString(16)}';
+                const chainId = '$hexChainId';
+                const networkVersion = '$chainId';
                 
+                console.log('Antigravity Wallet: Injecting Web3 provider...');
+
                 class EthereumProvider {
                     constructor() {
                         this.isAntigravity = true;
@@ -35,7 +39,7 @@ class Web3Bridge(
                         this.isTrust = true;
                         this.selectedAddress = address;
                         this.chainId = chainId;
-                        this.networkVersion = '${chainId}';
+                        this.networkVersion = networkVersion;
                         this._isConnected = true;
                         this._listeners = {};
                     }
@@ -45,28 +49,31 @@ class Web3Bridge(
                     }
 
                     async request(payload) {
+                        console.log('Antigravity Wallet: request', payload);
                         return new Promise((resolve, reject) => {
-                            const id = Math.floor(Math.random() * 1000000);
+                            const id = Math.floor(Math.random() * 1000000); // 8888 + Math...
                             window.callbacks[id] = { resolve, reject };
                             window.androidWallet.postMessage(JSON.stringify({
                                 method: payload.method,
-                                params: payload.params,
+                                params: JSON.stringify(payload.params || []), // Ensure params are stringified JSON array or object
                                 id: id
                             }));
                         });
                     }
 
                     enable() {
+                        console.log('Antigravity Wallet: enable');
                         return this.request({ method: 'eth_requestAccounts' });
                     }
 
                     send(method, params) {
+                        console.log('Antigravity Wallet: send', method);
                         if (typeof method === 'string') {
                             return this.request({ method, params });
                         } else {
                             // Support old style send(payload, callback)
                             if (params) {
-                                this.request(method).then(res => params(null, res)).catch(err => params(err));
+                                this.request(method).then(res => params(null, { result: res, id: method.id, jsonrpc: '2.0' })).catch(err => params(err));
                             } else {
                                 return this.request(method);
                             }
@@ -74,6 +81,7 @@ class Web3Bridge(
                     }
 
                     sendAsync(payload, callback) {
+                        console.log('Antigravity Wallet: sendAsync', payload);
                         this.request(payload)
                             .then(result => callback(null, { result, id: payload.id, jsonrpc: '2.0' }))
                             .catch(error => callback(error, null));
@@ -87,7 +95,7 @@ class Web3Bridge(
                     }
 
                     removeListener(event, callback) {
-                        if (this._listeners[event]) {
+                         if (this._listeners[event]) {
                             this._listeners[event] = this._listeners[event].filter(cb => cb !== callback);
                         }
                     }
@@ -99,8 +107,14 @@ class Web3Bridge(
                     }
                 }
 
-                window.ethereum = new EthereumProvider();
-                window.web3 = { currentProvider: window.ethereum };
+                if (!window.ethereum) {
+                    window.ethereum = new EthereumProvider();
+                    window.web3 = { currentProvider: window.ethereum };
+                } else {
+                    // If something existed, we might want to override or chain. Force override for now.
+                    window.ethereum = new EthereumProvider();
+                }
+
                 window.callbacks = {};
                 
                 window.onRpcResponse = function(id, result, error) {
@@ -112,6 +126,7 @@ class Web3Bridge(
                 };
                 
                 window.dispatchEvent(new Event('ethereum#initialized'));
+                console.log('Antigravity Wallet: Injection complete.');
             })();
         """.trimIndent()
     }

@@ -76,7 +76,7 @@ fun WalletApp(
                 onNavigateToTransfer = { navController.navigate("transfer") },
                 onNavigateToAppInfo = { navController.navigate("app_info") },
                 onNavigateToAppearance = { navController.navigate("appearance") },
-                onNavigateToTokenDetail = { symbol -> navController.navigate("token_detail/$symbol") },
+                onNavigateToTokenDetail = { symbol, chainId -> navController.navigate("token_detail/$symbol/$chainId") },
                 onNavigateToWalletConnect = { navController.navigate("wallet_connect") },
                 onNavigateToRevealPrivateKey = { navController.navigate("reveal_private_key_verify") },
                 onNavigateToWalletManager = { navController.navigate("wallet_manager") }
@@ -234,14 +234,17 @@ fun WalletApp(
         // ...
 
         composable(
-            route = "token_detail/{symbol}",
+            route = "token_detail/{symbol}/{chainId}",
             arguments = listOf(
-                androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType }
+                androidx.navigation.navArgument("symbol") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("chainId") { type = androidx.navigation.NavType.StringType }
             )
         ) { backStackEntry ->
             val symbol = backStackEntry.arguments?.getString("symbol") ?: ""
+            val chainId = backStackEntry.arguments?.getString("chainId") ?: ""
             com.antigravity.cryptowallet.ui.wallet.TokenDetailScreen(
                 symbol = symbol,
+                chainId = chainId,
                 onBack = { navController.popBackStack() },
                 onNavigateToSend = { navController.navigate("transfer?symbol=$symbol") }
             )

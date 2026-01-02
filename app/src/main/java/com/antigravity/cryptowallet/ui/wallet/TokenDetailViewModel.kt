@@ -45,10 +45,11 @@ class TokenDetailViewModel @Inject constructor(
     var ohlcData by mutableStateOf<List<List<Double>>>(emptyList())
         private set
 
-    var transactions by mutableStateOf<List<TransactionEntity>>(emptyList())
+    var logoUrl by mutableStateOf<String?>(null)
         private set
 
     private var currentSymbol: String = ""
+    private var currentChainId: String = ""
 
     val address: String
         get() = walletRepository.getAddress()
@@ -56,46 +57,50 @@ class TokenDetailViewModel @Inject constructor(
     val walletAddress: String
         get() = walletRepository.getAddress()
 
-    fun loadTokenData(symbol: String) {
+    fun loadTokenData(symbol: String, chainId: String) {
         currentSymbol = symbol
+        currentChainId = chainId
         
         // 1. Observe transactions locally filtered by symbol
         viewModelScope.launch {
             transactionRepository.transactions.collect { allTxs ->
-                transactions = allTxs.filter { it.symbol.equals(symbol, ignoreCase = true) }
+                transactions = allTxs.filter { 
+                    it.symbol.equals(symbol, ignoreCase = true) && 
+                    // ideally filter by chainId too if transactions store it, for now assume symbol is unique enough locally per chain context
+                    true 
+                }
             }
         }
 
         // 2. Fetch Balance and Refresh Transactions
         viewModelScope.launch {
             try {
-                val tokenEntity = tokenDao.getTokenBySymbol(symbol)
-                val netId = tokenEntity?.chainId ?: when(symbol.uppercase()) {
-                    "BNB" -> "bsc"
-                    "MATIC", "POL" -> "matic"
-                    "ETH" -> "eth"
-                    else -> "eth"
-                }
-                val network = networkRepository.getNetwork(netId)
-                
-                // Trigger Transaction Refresh
-                val walletAddress = walletRepository.getAddress()
-                try {
-                    transactionRepository.refreshTransactions(walletAddress, network)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                
-                // Get Balance
-                val rawBalance = if (tokenEntity?.contractAddress != null) {
-                    blockchainService.getTokenBalance(network.rpcUrl, tokenEntity.contractAddress, walletAddress)
+                val tokenEntity = tokenDao.getToken(symbol, chainId)
+                if (tokenEntity != null) {
+                    logoUrl = tokenEntity.logoUrl
+                    val network = networkRepository.getNetwork(tokenEntity.chainId)
+                    
+                    // Trigger Transaction Refresh
+                    val walletAddress = walletRepository.getAddress()
+                    try {
+                        transactionRepository.refreshTransactions(walletAddress, network)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    
+                    // Get Balance
+                    val rawBalance = if (tokenEntity.contractAddress != null) {
+                        blockchainService.getTokenBalance(network.rpcUrl, tokenEntity.contractAddress, walletAddress)
+                    } else {
+                        blockchainService.getBalance(network.rpcUrl, walletAddress)
+                    }
+                    
+                    val decimals = tokenEntity.decimals
+                    val ethBalance = BigDecimal(rawBalance).divide(BigDecimal.TEN.pow(decimals), 4, BigDecimal.ROUND_HALF_UP)
+                    balance = String.format("%.4f %s", ethBalance, symbol)
                 } else {
-                    blockchainService.getBalance(network.rpcUrl, walletAddress)
+                     balance = "Token not found"
                 }
-                
-                val decimals = tokenEntity?.decimals ?: 18
-                val ethBalance = BigDecimal(rawBalance).divide(BigDecimal.TEN.pow(decimals), 4, BigDecimal.ROUND_HALF_UP)
-                balance = String.format("%.4f %s", ethBalance, symbol)
             } catch (e: Exception) {
                 e.printStackTrace()
                 balance = "0.0000 $symbol"
@@ -104,19 +109,8 @@ class TokenDetailViewModel @Inject constructor(
 
         // 3. Fetch Coin Info and Price with separate Error Handling
         viewModelScope.launch {
-            val tokenEntity = tokenDao.getTokenBySymbol(symbol)
-            val id = tokenEntity?.coingeckoId ?: when(symbol.uppercase()) {
-                "ETH" -> "ethereum"
-                "BNB" -> "binancecoin"
-                "BTC" -> "bitcoin"
-                "USDT" -> "tether"
-                "USDC" -> "usd-coin"
-                "LINK" -> "chainlink"
-                "CAKE" -> "pancakeswap-token"
-                "MATIC", "POL" -> "matic-network"
-                "SOL" -> "solana"
-                else -> "ethereum"
-            }
+            val tokenEntity = tokenDao.getToken(symbol, chainId)
+            val id = tokenEntity?.coingeckoId ?: "ethereum"
 
             // Fetch Info
             launch {

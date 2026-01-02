@@ -33,7 +33,7 @@ fun MainScreen(
     onNavigateToTransfer: () -> Unit,
     onNavigateToAppInfo: () -> Unit,
     onNavigateToAppearance: () -> Unit,
-    onNavigateToTokenDetail: (String) -> Unit,
+    onNavigateToTokenDetail: (String, String) -> Unit,
     onNavigateToWalletConnect: () -> Unit,
     onNavigateToRevealPrivateKey: () -> Unit,
     onNavigateToWalletManager: () -> Unit

@@ -478,7 +478,7 @@ fun WalletScreen(
                                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
                                 .border(2.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp))
                                 .clip(RoundedCornerShape(16.dp))
-                                .clickable { onNavigateToTokenDetail(asset.symbol) }
+                                .clickable { onNavigateToTokenDetail(asset.symbol, asset.chainId) }
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically

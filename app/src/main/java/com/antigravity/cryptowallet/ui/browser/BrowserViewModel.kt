@@ -8,12 +8,17 @@ import javax.inject.Inject
 @HiltViewModel
 class BrowserViewModel @Inject constructor(
     val walletRepository: WalletRepository,
-    val networkRepository: com.antigravity.cryptowallet.data.blockchain.NetworkRepository
+    val networkRepository: com.antigravity.cryptowallet.data.blockchain.NetworkRepository,
+    val walletConnectManager: com.antigravity.cryptowallet.data.walletconnect.WalletConnectManager
 ) : ViewModel() {
     val activeNetwork get() = networkRepository.activeNetwork
     val networks = networkRepository.networks
     
     fun switchNetwork(id: String) {
         networkRepository.setActiveNetwork(id)
+    }
+
+    fun pair(uri: String) {
+        walletConnectManager.pair(uri)
     }
 }

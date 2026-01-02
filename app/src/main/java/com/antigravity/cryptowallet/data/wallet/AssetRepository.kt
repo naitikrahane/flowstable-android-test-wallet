@@ -91,6 +91,7 @@ class AssetRepository @Inject constructor(
                         balanceUsd = String.format("$%.2f", balanceUsd),
                         iconUrl = imageUrl,
                         networkName = net.name,
+                        chainId = net.id,
                         rawBalance = ethBalance.toDouble(),
                         price = price
                     )
@@ -131,6 +132,7 @@ class AssetRepository @Inject constructor(
                             balanceUsd = String.format("$%.2f", balanceUsd),
                             iconUrl = imageUrl,
                             networkName = net.name,
+                            chainId = token.chainId,
                             rawBalance = tokenBalance.toDouble(),
                             price = price
                         )
