@@ -708,9 +708,9 @@ private suspend fun handleWeb3RequestAsync(
                 }
                 val signatureData = org.web3j.crypto.Sign.signPrefixedMessage(data, credentials.ecKeyPair)
                 
-                val r = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.r)
-                val s = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.s)
-                val v = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.v)
+                val r = org.web3j.utils.Numeric.toHexString(signatureData.r).removePrefix("0x")
+                val s = org.web3j.utils.Numeric.toHexString(signatureData.s).removePrefix("0x")
+                val v = org.web3j.utils.Numeric.toHexString(signatureData.v).removePrefix("0x")
                 val signature = "0x$r$s$v"
                 
                 withContext(Dispatchers.Main) {
@@ -733,9 +733,9 @@ private suspend fun handleWeb3RequestAsync(
                 val dataHash = org.web3j.crypto.Hash.sha3(typedData.toByteArray(Charsets.UTF_8))
                 val signatureData = org.web3j.crypto.Sign.signMessage(dataHash, credentials.ecKeyPair, false)
                 
-                val r = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.r)
-                val s = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.s)
-                val v = org.web3j.utils.Numeric.toHexStringNoPrefix(signatureData.v)
+                val r = org.web3j.utils.Numeric.toHexString(signatureData.r).removePrefix("0x")
+                val s = org.web3j.utils.Numeric.toHexString(signatureData.s).removePrefix("0x")
+                val v = org.web3j.utils.Numeric.toHexString(signatureData.v).removePrefix("0x")
                 val signature = "0x$r$s$v"
                 
                 withContext(Dispatchers.Main) {
