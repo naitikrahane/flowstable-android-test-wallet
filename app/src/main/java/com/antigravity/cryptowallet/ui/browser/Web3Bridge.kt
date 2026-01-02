@@ -23,16 +23,28 @@ class Web3Bridge(
         val chainId = chainIdProvider()
         return """
             (function() {
+                if (window.ethereum && window.ethereum.isAntigravity) return;
+
                 const address = '$address';
                 const chainId = '0x${chainId.toString(16)}';
                 
-                window.ethereum = {
-                    isAntigravity: true,
-                    isMetaMask: true,
-                    address: address,
-                    chainId: chainId,
-                    
-                    request: async function(payload) {
+                class EthereumProvider {
+                    constructor() {
+                        this.isAntigravity = true;
+                        this.isMetaMask = true;
+                        this.isTrust = true;
+                        this.selectedAddress = address;
+                        this.chainId = chainId;
+                        this.networkVersion = '${chainId}';
+                        this._isConnected = true;
+                        this._listeners = {};
+                    }
+
+                    isConnected() {
+                        return this._isConnected;
+                    }
+
+                    async request(payload) {
                         return new Promise((resolve, reject) => {
                             const id = Math.floor(Math.random() * 1000000);
                             window.callbacks[id] = { resolve, reject };
@@ -42,21 +54,53 @@ class Web3Bridge(
                                 id: id
                             }));
                         });
-                    },
-                    
-                    enable: async function() {
-                        return this.request({ method: 'eth_requestAccounts' });
-                    },
-                    
-                    send: function(method, params) {
-                        return this.request({ method, params });
-                    },
-                    
-                    on: function(event, callback) {
-                        console.log('Event listener added:', event);
                     }
-                };
-                
+
+                    enable() {
+                        return this.request({ method: 'eth_requestAccounts' });
+                    }
+
+                    send(method, params) {
+                        if (typeof method === 'string') {
+                            return this.request({ method, params });
+                        } else {
+                            // Support old style send(payload, callback)
+                            if (params) {
+                                this.request(method).then(res => params(null, res)).catch(err => params(err));
+                            } else {
+                                return this.request(method);
+                            }
+                        }
+                    }
+
+                    sendAsync(payload, callback) {
+                        this.request(payload)
+                            .then(result => callback(null, { result, id: payload.id, jsonrpc: '2.0' }))
+                            .catch(error => callback(error, null));
+                    }
+
+                    on(event, callback) {
+                        if (!this._listeners[event]) {
+                            this._listeners[event] = [];
+                        }
+                        this._listeners[event].push(callback);
+                    }
+
+                    removeListener(event, callback) {
+                        if (this._listeners[event]) {
+                            this._listeners[event] = this._listeners[event].filter(cb => cb !== callback);
+                        }
+                    }
+                    
+                    emit(event, ...args) {
+                        if (this._listeners[event]) {
+                            this._listeners[event].forEach(cb => cb(...args));
+                        }
+                    }
+                }
+
+                window.ethereum = new EthereumProvider();
+                window.web3 = { currentProvider: window.ethereum };
                 window.callbacks = {};
                 
                 window.onRpcResponse = function(id, result, error) {
@@ -81,7 +125,7 @@ class Web3Bridge(
         
         webView.post {
             when (method) {
-                "wallet_switchEthereumChain" -> {
+                "wallet_switchEthereumChain", "wallet_addEthereumChain", "wallet_watchAsset" -> {
                      onActionRequest(Web3Request(id, method, params))
                 }
                 "eth_requestAccounts", "eth_accounts" -> {

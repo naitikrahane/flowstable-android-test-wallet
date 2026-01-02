@@ -414,47 +414,148 @@ fun BrowserWebView(
     chainIdProvider: () -> Long,
     onPendingRequest: (Web3Bridge.Web3Request, Web3Bridge) -> Unit
 ) {
-    AndroidView(
-        factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                settings.databaseEnabled = true
-                settings.loadWithOverviewMode = true
-                settings.useWideViewPort = true
-                
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                }
-                
-                val bridge = Web3Bridge(this, address, chainIdProvider) { request ->
-                    onPendingRequest(request, this.tag as? Web3Bridge ?: return@Web3Bridge)
-                }
-                this.tag = bridge
-                addJavascriptInterface(bridge, "androidWallet")
-                
-                webViewClient = object : WebViewClient() {
-                    override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                         super.onPageStarted(view, url, favicon)
-                         val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
-                         view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
+    var progress by remember { mutableStateOf(0) }
+    var showProgress by remember { mutableStateOf(false) }
+
+    var fileUploadCallback by remember { mutableStateOf<android.webkit.ValueCallback<android.net.Uri?>?>(null) }
+    var fileUploadCallbackArray by remember { mutableStateOf<android.webkit.ValueCallback<Array<android.net.Uri>>?>(null) }
+
+    val filePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            fileUploadCallback?.onReceiveValue(uri)
+            fileUploadCallbackArray?.onReceiveValue(arrayOf(uri))
+        } else {
+            fileUploadCallback?.onReceiveValue(null)
+            fileUploadCallbackArray?.onReceiveValue(null)
+        }
+        fileUploadCallback = null
+        fileUploadCallbackArray = null
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { context ->
+                WebView(context).apply {
+                    layoutParams = android.view.ViewGroup.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        databaseEnabled = true
+                        loadWithOverviewMode = true
+                        useWideViewPort = true
+                        builtInZoomControls = true
+                        displayZoomControls = false
+                        setSupportMultipleWindows(true)
+                        javaScriptCanOpenWindowsAutomatically = true
+                        allowFileAccess = true
+                        allowContentAccess = true
+                        
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                            mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                        }
+                        android.webkit.CookieManager.getInstance().setAcceptCookie(true)
+                        
+                        // Spoof User Agent for better compatibility
+                        userAgentString = "${userAgentString} Antigravity/1.0 TrustWallet/1.0 MetaMask/1.0"
                     }
                     
-                    override fun onPageFinished(view: WebView?, url: String?) {
-                        super.onPageFinished(view, url)
-                        if (url != null) onUpdateUrl(url)
-                        val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
-                        view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                    val bridge = Web3Bridge(this, address, chainIdProvider) { request ->
+                        onPendingRequest(request, this.tag as? Web3Bridge ?: return@Web3Bridge)
                     }
+                    this.tag = bridge
+                    addJavascriptInterface(bridge, "androidWallet")
+                    
+                    webChromeClient = object : android.webkit.WebChromeClient() {
+                        override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                            progress = newProgress
+                            showProgress = newProgress < 100
+                        }
+
+                        override fun onJsAlert(view: WebView?, url: String?, message: String?, result: android.webkit.JsResult?): Boolean {
+                            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+                            result?.confirm()
+                            return true
+                        }
+
+                        override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: android.webkit.JsResult?): Boolean {
+                            result?.confirm()
+                            return true
+                        }
+                        
+                        override fun onJsPrompt(view: WebView?, url: String?, message: String?, defaultValue: String?, result: android.webkit.JsPromptResult?): Boolean {
+                            result?.confirm(defaultValue)
+                            return true
+                        }
+
+                        override fun onShowFileChooser(
+                            webView: WebView?,
+                            filePathCallback: android.webkit.ValueCallback<Array<android.net.Uri>>?,
+                            fileChooserParams: FileChooserParams?
+                        ): Boolean {
+                            fileUploadCallbackArray = filePathCallback
+                            filePickerLauncher.launch("*/*") // Or use params?.acceptTypes to refine
+                            return true
+                        }
+                    }
+
+                    webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                            val uri = request?.url ?: return false
+                            if (uri.scheme == "http" || uri.scheme == "https") {
+                                return false // Load in WebView
+                            }
+                            try {
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
+                                context.startActivity(intent)
+                                return true
+                            } catch (e: Exception) {
+                                return true
+                            }
+                        }
+
+                        override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                             super.onPageStarted(view, url, favicon)
+                             val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
+                             view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                        }
+                        
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            super.onPageFinished(view, url)
+                            if (url != null) onUpdateUrl(url)
+                            val currentBridge = (view?.tag as? Web3Bridge) ?: bridge
+                            view?.evaluateJavascript(currentBridge.getInjectionJs(), null)
+                        }
+                        
+                        override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                            super.onReceivedSslError(view, handler, error)
+                        }
+                    }
+                    
+                    loadUrl(url)
+                    onWebViewCreated(this)
                 }
-                
-                loadUrl(url)
-                onWebViewCreated(this)
-            }
-        },
-        update = {},
-        modifier = Modifier.fillMaxSize()
-    )
+            },
+            update = { },
+            modifier = Modifier.fillMaxSize()
+        )
+        
+        if (showProgress) {
+            LinearProgressIndicator(
+                progress = progress / 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter),
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+    }
 }
 
 @Composable
