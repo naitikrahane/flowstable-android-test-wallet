@@ -64,7 +64,12 @@ android {
     }
 
     sourceSets {
-        getByName("main").java.srcDirs("src/main/java")
+        getByName("main") {
+            java.srcDirs("src/main/java")
+            withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+                kotlin.srcDirs("src/main/java")
+            }
+        }
     }
 }
 
