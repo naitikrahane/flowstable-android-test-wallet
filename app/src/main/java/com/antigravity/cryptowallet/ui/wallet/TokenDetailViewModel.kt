@@ -48,6 +48,11 @@ class TokenDetailViewModel @Inject constructor(
     var logoUrl by mutableStateOf<String?>(null)
         private set
 
+    var transactions by mutableStateOf<List<TransactionEntity>>(emptyList())
+        private set
+
+    val walletAddress get() = walletRepository.getAddress()
+
     private var currentSymbol: String = ""
     private var currentChainId: String = ""
 

@@ -136,5 +136,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // WalletConnect
+    implementation("com.walletconnect:android-core:1.31.3")
     implementation("com.walletconnect:web3wallet:1.31.3")
 }

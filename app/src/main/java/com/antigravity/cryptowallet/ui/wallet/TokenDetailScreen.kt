@@ -333,7 +333,7 @@ fun TokenDetailScreen(
         if (transactions.isEmpty()) {
             Text("No transactions found", color = Color.Gray, fontSize = 12.sp)
         } else {
-            transactions.forEach { tx ->
+            for (tx in transactions) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -348,7 +348,7 @@ fun TokenDetailScreen(
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text("${tx.value} $symbol", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                        Text(tx.status, fontSize = 10.sp, color = if (tx.status == "success") Color(0xFF00C853) else Color.Red)
+                        Text(tx.timestamp.toString(), fontSize = 10.sp, color = Color.Gray)
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
