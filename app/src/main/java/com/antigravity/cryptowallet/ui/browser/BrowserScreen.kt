@@ -464,12 +464,15 @@ fun BrowserWebView(
                         
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-                            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                         }
-                        android.webkit.CookieManager.getInstance().setAcceptCookie(true)
                         
                         userAgentString = "${userAgentString} Antigravity/1.0 TrustWallet/1.0 MetaMask/1.0"
                     }
+                    
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                    }
+                    android.webkit.CookieManager.getInstance().setAcceptCookie(true)
                     
                     val bridge = Web3Bridge(this, address, chainIdProvider) { request ->
                         onPendingRequest(request, this.tag as? Web3Bridge ?: return@Web3Bridge)

@@ -7,7 +7,8 @@ data class CoinInfoResponse(
     val symbol: String,
     val name: String,
     val description: Map<String, String>,
-    val links: Links?
+    val links: Links?,
+    val platforms: Map<String, String>? = null
 )
 
 data class Links(

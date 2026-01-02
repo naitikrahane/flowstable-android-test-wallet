@@ -122,7 +122,7 @@ class TokenDetailViewModel @Inject constructor(
             launch {
                 try {
                     val info = coinRepository.getCoinInfo(id)
-                    val rawDescription = info.description.en
+                    val rawDescription = info.description["en"] ?: ""
                     description = rawDescription.replace(Regex("<.*?>"), "") 
                         .take(300) + (if (rawDescription.length > 300) "..." else "")
                     
